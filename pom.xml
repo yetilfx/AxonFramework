@@ -19,7 +19,7 @@
 
     <groupId>org.axonframework</groupId>
     <artifactId>axon</artifactId>
-    <version>1.4</version>
+    <version>1.5-SNAPSHOT</version>
     <modules>
         <module>core</module>
         <module>integration</module>
