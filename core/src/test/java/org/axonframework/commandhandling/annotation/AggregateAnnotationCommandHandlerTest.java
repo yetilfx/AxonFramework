@@ -18,6 +18,7 @@ package org.axonframework.commandhandling.annotation;
 
 import org.axonframework.commandhandling.CommandCallback;
 import org.axonframework.commandhandling.SimpleCommandBus;
+import org.axonframework.commandhandling.callbacks.VoidCallback;
 import org.axonframework.domain.AggregateIdentifier;
 import org.axonframework.domain.StringAggregateIdentifier;
 import org.axonframework.domain.StubDomainEvent;
@@ -35,7 +36,8 @@ import static org.mockito.Mockito.*;
 /**
  * @author Allard Buijze
  */
-@SuppressWarnings({"unchecked"}) public class AggregateAnnotationCommandHandlerTest {
+@SuppressWarnings({"unchecked"})
+public class AggregateAnnotationCommandHandlerTest {
 
     private AggregateAnnotationCommandHandler<StubCommandAnnotatedAggregate> testSubject;
     private SimpleCommandBus commandBus;
@@ -48,6 +50,39 @@ import static org.mockito.Mockito.*;
         testSubject = new AggregateAnnotationCommandHandler<StubCommandAnnotatedAggregate>(
                 StubCommandAnnotatedAggregate.class, mockRepository, commandBus);
         testSubject.subscribe();
+    }
+
+    @Test
+    public void testAggregateConstructorThrowsException() {
+        commandBus.dispatch(new FailingCreateCommand("parameter"), new VoidCallback() {
+            @Override
+            protected void onSuccess() {
+                fail("Expected exception");
+            }
+
+            @Override
+            public void onFailure(Throwable cause) {
+                assertEquals("parameter", cause.getMessage());
+            }
+        });
+    }
+
+    @Test
+    public void testAggregateCommandHandlerThrowsException() {
+        StringAggregateIdentifier aggregateIdentifier = new StringAggregateIdentifier("abc123");
+        when(mockRepository.load(any(AggregateIdentifier.class), anyLong()))
+                .thenReturn(new StubCommandAnnotatedAggregate(aggregateIdentifier));
+        commandBus.dispatch(new FailingUpdateCommand(aggregateIdentifier.asString(), "parameter"), new VoidCallback() {
+            @Override
+            protected void onSuccess() {
+                fail("Expected exception");
+            }
+
+            @Override
+            public void onFailure(Throwable cause) {
+                assertEquals("parameter", cause.getMessage());
+            }
+        });
     }
 
     @Test
@@ -215,6 +250,11 @@ import static org.mockito.Mockito.*;
             apply(new StubDomainEvent());
         }
 
+        @CommandHandler
+        public StubCommandAnnotatedAggregate(FailingCreateCommand createCommand) {
+            throw new RuntimeException(createCommand.getParameter());
+        }
+
         public StubCommandAnnotatedAggregate(StringAggregateIdentifier aggregateIdentifier) {
             super(aggregateIdentifier);
         }
@@ -243,6 +283,11 @@ import static org.mockito.Mockito.*;
         public String handleUpdate(UpdateCommandWithAnnotatedFieldAndIntegerVersion updateCommand) {
             return "Field with integer version works fine";
         }
+
+        @CommandHandler
+        public void handleFailingUpdate(FailingUpdateCommand updateCommand) {
+            throw new RuntimeException(updateCommand.getMessage());
+        }
     }
 
     private static class CreateCommand {
@@ -258,6 +303,13 @@ import static org.mockito.Mockito.*;
         }
     }
 
+    private static class FailingCreateCommand extends CreateCommand {
+
+        private FailingCreateCommand(String parameter) {
+            super(parameter);
+        }
+    }
+
     private static class UpdateCommandWithAnnotatedMethod {
 
         private String aggregateIdentifier;
@@ -269,6 +321,20 @@ import static org.mockito.Mockito.*;
         @TargetAggregateIdentifier
         public String getAggregateIdentifier() {
             return aggregateIdentifier;
+        }
+    }
+
+    private static class FailingUpdateCommand extends UpdateCommandWithAnnotatedField {
+
+        private final String message;
+
+        private FailingUpdateCommand(String aggregateIdentifier, String message) {
+            super(aggregateIdentifier);
+            this.message = message;
+        }
+
+        public String getMessage() {
+            return message;
         }
     }
 

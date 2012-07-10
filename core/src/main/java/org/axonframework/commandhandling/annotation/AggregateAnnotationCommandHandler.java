@@ -26,6 +26,7 @@ import org.axonframework.unitofwork.UnitOfWork;
 import org.axonframework.util.Handler;
 import org.axonframework.util.Subscribable;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.PostConstruct;
@@ -96,7 +97,11 @@ public class AggregateAnnotationCommandHandler<T extends AggregateRoot> implemen
                 @Override
                 public Object handle(Object command, UnitOfWork unitOfWork) throws Throwable {
                     T aggregate = loadAggregate(command);
-                    return commandHandler.invoke(aggregate, command, unitOfWork);
+                    try {
+                        return commandHandler.invoke(aggregate, command, unitOfWork);
+                    } catch (InvocationTargetException e) {
+                        throw e.getCause();
+                    }
                 }
             };
             commandBus.subscribe(commandHandler.getParameterType(), handler);
@@ -114,6 +119,7 @@ public class AggregateAnnotationCommandHandler<T extends AggregateRoot> implemen
     }
 
     private class AnnotatedConstructorCommandHandler implements CommandHandler<Object> {
+
         private final ConstructorCommandHandler<T> handler;
 
         public AnnotatedConstructorCommandHandler(ConstructorCommandHandler<T> handler) {
@@ -122,7 +128,11 @@ public class AggregateAnnotationCommandHandler<T extends AggregateRoot> implemen
 
         @Override
         public Object handle(Object command, UnitOfWork unitOfWork) throws Throwable {
-            repository.add(handler.invoke(command, unitOfWork));
+            try {
+                repository.add(handler.invoke(command, unitOfWork));
+            } catch (InvocationTargetException e) {
+                throw e.getCause();
+            }
             return Void.TYPE;
         }
     }
