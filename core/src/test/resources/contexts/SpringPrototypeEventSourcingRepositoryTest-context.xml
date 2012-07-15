@@ -42,6 +42,8 @@
         <property name="singleton" value="true"/>
     </bean>
 
-    <bean id="myStubAggregate" class="org.axonframework.domain.StubAggregate" scope="prototype"/>
+    <bean id="myStubAggregate" class="org.axonframework.eventsourcing.SpringWiredAggregate" scope="prototype">
+        <property name="someProperty" value="someValue"/>
+    </bean>
 
 </beans>

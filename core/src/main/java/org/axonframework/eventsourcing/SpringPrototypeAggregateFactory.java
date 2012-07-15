@@ -24,6 +24,9 @@ import org.springframework.beans.factory.annotation.Required;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
+import java.util.Map;
+import java.util.WeakHashMap;
+
 import static java.lang.String.format;
 
 /**
@@ -41,11 +44,33 @@ public class SpringPrototypeAggregateFactory<T extends EventSourcedAggregateRoot
     private String typeIdentifier;
     private ApplicationContext applicationContext;
     private String beanName;
+    private final Map<T, Object> wiredAggregates = new WeakHashMap<T, Object>();
+    private final Object weakValue = new Object();
 
     @SuppressWarnings({"unchecked"})
     @Override
     public T createAggregate(AggregateIdentifier aggregateIdentifier, DomainEvent firstEvent) {
-        return (T) applicationContext.getBean(prototypeBeanName, aggregateIdentifier);
+        T bean = (T) applicationContext.getBean(prototypeBeanName, aggregateIdentifier);
+        wiredAggregates.put(bean, weakValue);
+        return bean;
+    }
+
+    /**
+     * Ensures that the given <code>aggregate</code> is fully autowired and configured as defined by the prototype
+     * bean. This method should be especially invoked when an aggregate was reconstructed from a Snapshot Event.
+     *
+     * @param aggregate The aggregate to autowire
+     * @return the aggregate instance to use. May be the same as the given <code>aggregate</code>, or a wrapped version
+     */
+    @SuppressWarnings("unchecked")
+    public T autowire(T aggregate) {
+        if (!wiredAggregates.containsKey(aggregate)) {
+            T wiredAggregate = (T) applicationContext.getAutowireCapableBeanFactory()
+                                                     .configureBean(aggregate, prototypeBeanName);
+            wiredAggregates.put(wiredAggregate, weakValue);
+            return wiredAggregate;
+        }
+        return aggregate;
     }
 
     @Override

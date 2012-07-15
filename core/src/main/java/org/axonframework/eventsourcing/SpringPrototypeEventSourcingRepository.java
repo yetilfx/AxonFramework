@@ -16,6 +16,7 @@
 
 package org.axonframework.eventsourcing;
 
+import org.axonframework.domain.AggregateIdentifier;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanNameAware;
 import org.springframework.beans.factory.InitializingBean;
@@ -41,12 +42,18 @@ public class SpringPrototypeEventSourcingRepository<T extends EventSourcedAggreg
     private final SpringPrototypeAggregateFactory<T> prototypeFactory;
 
     /**
-     *
+     * Initializes the SpringPrototypeEventSourcingRepository.
      */
-    @Deprecated
     public SpringPrototypeEventSourcingRepository() {
         super(new SpringPrototypeAggregateFactory<T>());
         this.prototypeFactory = (SpringPrototypeAggregateFactory<T>) getAggregateFactory();
+    }
+
+    @Override
+    protected T doLoad(AggregateIdentifier aggregateIdentifier, Long expectedVersion) {
+        T aggregate = super.doLoad(aggregateIdentifier, expectedVersion);
+        prototypeFactory.autowire(aggregate);
+        return aggregate;
     }
 
     /**
@@ -85,5 +92,10 @@ public class SpringPrototypeEventSourcingRepository<T extends EventSourcedAggreg
     @Override
     public void setBeanName(String name) {
         prototypeFactory.setBeanName(name);
+    }
+
+    @Override
+    public final AggregateFactory<T> getAggregateFactory() {
+        return super.getAggregateFactory();
     }
 }
