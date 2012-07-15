@@ -18,7 +18,6 @@ package org.axonframework.eventsourcing;
 
 import org.axonframework.domain.AggregateIdentifier;
 import org.axonframework.domain.SimpleDomainEventStream;
-import org.axonframework.domain.StubAggregate;
 import org.axonframework.domain.StubDomainEvent;
 import org.axonframework.domain.UUIDAggregateIdentifier;
 import org.axonframework.eventstore.EventStore;
@@ -49,7 +48,7 @@ public class SpringPrototypeEventSourcingRepositoryTest {
 
     @Autowired
     @Qualifier("repositoryOne")
-    private EventSourcingRepository<StubAggregate> repository;
+    private EventSourcingRepository<SpringWiredAggregate> repository;
 
     @Autowired
     @Qualifier("repositoryTwo")
@@ -79,13 +78,46 @@ public class SpringPrototypeEventSourcingRepositoryTest {
                                                         0L));
                         }
                     });
-            StubAggregate aggregate1 = repository.load(aggregateIdentifier1, 0L);
-            StubAggregate aggregate2 = repository.load(aggregateIdentifier2, 0L);
+            SpringWiredAggregate aggregate1 = repository.load(aggregateIdentifier1, 0L);
+            SpringWiredAggregate aggregate2 = repository.load(aggregateIdentifier2, 0L);
 
             assertNotSame(aggregate1, aggregate2);
             assertEquals(Long.valueOf(0L), aggregate1.getVersion());
             assertEquals(Long.valueOf(0L), aggregate2.getVersion());
+            assertEquals("someValue", aggregate1.getSomeProperty());
+            assertEquals(1, aggregate1.getInitializedCount());
+            assertEquals("someValue", aggregate2.getSomeProperty());
+            assertEquals(1, aggregate2.getInitializedCount());
         } finally {
+            while (CurrentUnitOfWork.isStarted()) {
+                CurrentUnitOfWork.get().rollback();
+            }
+        }
+    }
+
+    @Test
+    public void testCreateInstanceFromSnapshot() {
+        SpringWiredAggregate aggregate1 = null;
+        final AggregateIdentifier aggregateIdentifier1 = new UUIDAggregateIdentifier();
+        try {
+            final SpringWiredAggregate stubAggregate = new SpringWiredAggregate(aggregateIdentifier1);
+            stubAggregate.doSomething();
+            stubAggregate.commitEvents();
+            new DefaultUnitOfWork().start();
+            when(mockEventStore.readEvents(eq(repository.getTypeIdentifier()), isA(AggregateIdentifier.class)))
+                    .thenAnswer(new Answer<Object>() {
+                        @Override
+                        public Object answer(InvocationOnMock invocation) throws Throwable {
+                            return new SimpleDomainEventStream(
+                                    new AggregateSnapshot<SpringWiredAggregate>(stubAggregate));
+                        }
+                    });
+            aggregate1 = repository.load(aggregateIdentifier1, 0L);
+        } finally {
+            assertNotNull(aggregate1);
+            assertEquals(Long.valueOf(0L), aggregate1.getVersion());
+            assertEquals("someValue", aggregate1.getSomeProperty());
+            assertEquals(1, aggregate1.getInitializedCount());
             while (CurrentUnitOfWork.isStarted()) {
                 CurrentUnitOfWork.get().rollback();
             }
