@@ -19,12 +19,18 @@ package org.axonframework.test.saga;
 import org.axonframework.domain.AggregateIdentifier;
 import org.axonframework.domain.ApplicationEvent;
 import org.axonframework.domain.UUIDAggregateIdentifier;
+import org.axonframework.test.utils.CallbackBehavior;
 import org.hamcrest.CoreMatchers;
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
 import org.junit.*;
 
 import static org.axonframework.test.matchers.Matchers.noEvents;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.isA;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * @author Allard Buijze
@@ -91,11 +97,14 @@ public class AnnotatedSagaTest {
     }
 
     @Test
-    public void testFixtureApi_WhenTimeElapses() {
+    public void testFixtureApi_WhenTimeElapses() throws Throwable {
         AggregateIdentifier identifier = new UUIDAggregateIdentifier();
         AggregateIdentifier identifier2 = new UUIDAggregateIdentifier();
         AnnotatedSagaTestFixture fixture = new AnnotatedSagaTestFixture(StubSaga.class);
 
+        CallbackBehavior commandHandler = mock(CallbackBehavior.class);
+        when(commandHandler.handle(eq("Say hi!"))).thenReturn("Hi again!");
+        fixture.setCallbackBehavior(commandHandler);
         fixture.givenAggregate(identifier).published(new TriggerSagaStartEvent())
                .andThenAggregate(identifier2).published(new TriggerExistingSagaEvent())
 
@@ -105,8 +114,10 @@ public class AnnotatedSagaTest {
                .expectAssociationWith("aggregateIdentifier", identifier)
                .expectNoAssociationWith("aggregateIdentifier", identifier2)
                .expectNoScheduledEvents()
-               .expectDispatchedCommandsEqualTo("Say hi!")
+               .expectDispatchedCommandsEqualTo("Say hi!", "Hi again!")
                .expectPublishedEvents(noEvents());
+
+        verify(commandHandler).handle(isA(Object.class));
     }
 
     @Test

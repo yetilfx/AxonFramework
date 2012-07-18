@@ -18,6 +18,7 @@ package org.axonframework.test.saga;
 
 import org.axonframework.commandhandling.CommandBus;
 import org.axonframework.domain.Event;
+import org.axonframework.commandhandling.CommandCallback;
 import org.axonframework.eventhandling.EventBus;
 import org.axonframework.eventhandling.scheduling.EventScheduler;
 import org.axonframework.saga.annotation.AbstractAnnotatedSaga;
@@ -28,6 +29,8 @@ import org.joda.time.Duration;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.junit.Assert.fail;
 
 /**
  * @author Allard Buijze
@@ -73,7 +76,19 @@ public class StubSaga extends AbstractAnnotatedSaga {
     @SagaEventHandler(associationProperty = "aggregateIdentifier")
     public void handleTriggerEvent(TimerTriggeredEvent event) {
         handledEvents.add(event);
-        commandBus.dispatch("Say hi!");
+        commandBus.dispatch("Say hi!", new CommandCallback<Object>() {
+            @Override
+            public void onSuccess(Object result) {
+                if (result != null) {
+                    commandBus.dispatch(result);
+                }
+            }
+
+            @Override
+            public void onFailure(Throwable cause) {
+                fail("Didn't expect exception");
+            }
+        });
     }
 
 

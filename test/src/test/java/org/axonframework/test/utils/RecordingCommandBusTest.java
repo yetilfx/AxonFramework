@@ -22,6 +22,7 @@ import org.axonframework.unitofwork.UnitOfWork;
 import org.junit.*;
 
 import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -29,6 +30,7 @@ import static org.junit.Assert.*;
  * @author Allard Buijze
  */
 public class RecordingCommandBusTest {
+
     private RecordingCommandBus testSubject;
 
     @Before
@@ -42,7 +44,34 @@ public class RecordingCommandBusTest {
         testSubject.dispatch("Second", new CommandCallback<Object>() {
             @Override
             public void onSuccess(Object result) {
+                assertNull("Expected default callback behavior to invoke onSuccess(null)", result);
+            }
+
+            @Override
+            public void onFailure(Throwable cause) {
                 fail("Didn't expect callack to be invoked");
+            }
+        });
+        //noinspection AssertEqualsBetweenInconvertibleTypes
+        List<?> actual = testSubject.getDispatchedCommands();
+        assertEquals(2, actual.size());
+        assertEquals("First", actual.get(0));
+        assertEquals("Second", actual.get(1));
+    }
+
+    @Test
+    public void testPublishCommandWithCallbackBehavior() {
+        testSubject.setCallbackBehavior(new CallbackBehavior() {
+            @Override
+            public Object handle(Object commandPayload) throws Throwable {
+                return "callbackResult";
+            }
+        });
+        testSubject.dispatch("First");
+        testSubject.dispatch("Second", new CommandCallback<Object>() {
+            @Override
+            public void onSuccess(Object result) {
+                assertEquals("callbackResult", result);
             }
 
             @Override
