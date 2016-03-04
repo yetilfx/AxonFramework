@@ -31,9 +31,11 @@ import org.axonframework.unitofwork.UnitOfWorkListenerAdapter;
  * Implementation of the event sourcing repository that uses a cache to improve loading performance. The cache removes
  * the need to read all events from disk, at the cost of memory usage. Since caching is not compatible with the
  * optimistic locking strategy, only pessimistic locking is available for this type of repository.
+ * 事件源仓储实现类，利用缓存来提升加载性能。缓存读取不依赖与磁盘而是大量的使用内存。因为缓存不支持乐观锁策略，因此这个仓储只能使用悲观锁
  * <p/>
  * Note that an entry of a cached aggregate is immediately invalidated when an error occurs while saving that
  * aggregate. This is done to prevent the cache from returning aggregates that may not have fully persisted to disk.
+ * 注意，当存储聚合时如果有错误，则缓存中的聚合会立即失效。这样可以防止缓存返回的还没有持久化到磁盘的聚合【还不理解】
  *
  * @param <T> The type of aggregate this repository stores
  * @author Allard Buijze

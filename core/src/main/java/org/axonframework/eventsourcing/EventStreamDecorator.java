@@ -20,6 +20,7 @@ import org.axonframework.domain.DomainEventStream;
 
 /**
  * Interface describing a class that can decorates DomainEventStreams when events for aggregates are read or appended.
+ * 接口描述了一个DomainEventStreams装饰类，用于聚合读取或追加事件
  *
  * @author Allard Buijze
  * @since 0.7

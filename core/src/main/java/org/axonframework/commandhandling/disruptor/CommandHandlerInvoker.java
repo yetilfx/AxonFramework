@@ -42,7 +42,8 @@ import java.util.concurrent.ConcurrentMap;
 /**
  * Component of the DisruptorCommandBus that invokes the command handler. The execution is done within a Unit Of Work.
  * If an aggregate has been pre-loaded, it is set to the ThreadLocal.
- *
+ * DisruptorCommandBus中调用Command Handler的组件。在工作单元中完成执行。如果聚合被预加载，则被放入ThreadLocal变量中
+ * 
  * @author Allard Buijze
  * @since 2.0
  */
