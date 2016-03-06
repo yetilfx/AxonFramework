@@ -23,19 +23,28 @@ import org.axonframework.eventsourcing.annotation.AbstractAnnotatedAggregateRoot
 /**
  * Abstract AggregateFactory implementation that is aware of snapshot events. If an incoming event is not a snapshot
  * event, creation is delegated to the subclass.
+ * 聚合工厂识别快照事件的抽象实现。如果传入事件不是快照事件，则将被委派给子类。
  *
- * @param <T> The type of Aggregate created by this factory
+ * @param <T> The type of Aggregate created by this factory（工厂创建的聚合类型）
  * @author Allard Buijze
  * @since 2.0
  */
 public abstract class AbstractAggregateFactory<T extends EventSourcedAggregateRoot> implements AggregateFactory<T> {
 
+	//参数分析工厂类
     private final ParameterResolverFactory parameterResolverFactory;
 
+    /*
+     * 默认构造器，参数分析工厂类为null
+     */
     protected AbstractAggregateFactory() {
         this(null);
     }
 
+    /**
+     * 构造器
+     * @param parameterResolverFactory
+     */
     protected AbstractAggregateFactory(ParameterResolverFactory parameterResolverFactory) {
         this.parameterResolverFactory = parameterResolverFactory;
     }

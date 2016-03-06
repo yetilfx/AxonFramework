@@ -27,6 +27,7 @@ import static org.axonframework.common.CollectionUtils.getAnnotation;
 /**
  * Factory for the default parameter resolvers. This factory is capable for providing parameter resolvers for Message,
  * MetaData and @MetaData annotated parameters.
+ * 默认的参数解析器工厂。工厂为消息提供，按照元数据和元数据注解的参数来解析的参数解析器
  *
  * @author Allard Buijze
  * @since 2.0

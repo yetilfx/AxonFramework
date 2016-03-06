@@ -20,8 +20,10 @@ import org.axonframework.domain.Message;
 
 /**
  * Interface for a mechanism that resolves handler method parameter values from a given {@link Message}.
+ * 该接口，提供了一种基于给定消息（Message），解析处理器方法的参数值的机制。
+ * 实现类: FixedValueParameterResolver
  *
- * @param <T> The type of parameter returned by this resolver
+ * @param <T> The type of parameter returned by this resolver（该分析器返回的参数值类型）
  * @author Allard Buijze
  * @since 2.0
  */
@@ -30,6 +32,7 @@ public interface ParameterResolver<T> {
     /**
      * Resolves the parameter value to use for the given <code>message</code>, or <code>null</code> if no suitable
      * parameter value can be resolved.
+     * 解析给定消息的参数值，如果没有合适的参数值则返回Null。
      *
      * @param message The message to resolve the value from
      * @return the parameter value for the handler
@@ -38,7 +41,7 @@ public interface ParameterResolver<T> {
 
     /**
      * Indicates whether this resolver is capable of providing a value for the given <code>message</code>.
-     *
+     * 判断该解析器是否有能力处理给定的消息
      * @param message The message to evaluate
      * @return <code>true</code> if this resolver can provide a value for the message, otherwise <code>false</code>
      */

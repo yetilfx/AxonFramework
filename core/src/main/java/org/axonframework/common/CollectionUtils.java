@@ -63,11 +63,12 @@ public abstract class CollectionUtils {
      * Finds an annotation of given <code>annotationType</code> from the given <code>annotations</code>. If
      * <code>annotations</code> contains multiple annotations of the given type, the first one is returned. If none
      * is found, this method returns <code>null</code>.
+     * 从给定的一组注解中查找指定注解类型的注解。如果该组注解中包含多个匹配类型的注解时，则返回第一个。如果没有，则返回null.
      *
-     * @param annotations    The annotations to search in
-     * @param annotationType The type of annotation to search for
-     * @param <T>            The type of annotation to search for
-     * @return the first annotation found, or <code>null</code> if no such annotation is present
+     * @param annotations    The annotations to search in 待查找的一组注解
+     * @param annotationType The type of annotation to search for 待查找的注解类型
+     * @param <T>            The type of annotation to search for 待查找的注解类型
+     * @return the first annotation found, or <code>null</code> if no such annotation is present 找到的第一个匹配的注解或者null
      */
     @SuppressWarnings({"unchecked"})
     public static <T> T getAnnotation(Annotation[] annotations, Class<T> annotationType) {

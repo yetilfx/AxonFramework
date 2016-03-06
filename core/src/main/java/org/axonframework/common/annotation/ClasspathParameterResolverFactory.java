@@ -32,10 +32,13 @@ import static java.util.ServiceLoader.load;
 /**
  * ParameterResolverFactory instance that locates other ParameterResolverFactory instances on the class path. It uses
  * the {@link ServiceLoader} mechanism to locate and initialize them.
+ * 用于定位类库路径中其他参数解析器实例的，参数解析器工厂实例。其通过ServiceLoader机制定位和初始化他们
  * <p/>
  * This means for this class to find implementations, their fully qualified class name has to be put into a file called
  * <code>META-INF/services/org.axonframework.common.annotation.ParameterResolverFactory</code>. For more details, see
  * {@link ServiceLoader}.
+ * 这个类的意义就是找到实现类，只要在“META-INF/services/org.axonframework.common.annotation.ParameterResolverFactory”
+ * 文件中包含完整的类名称即可
  *
  * @author Allard Buijze
  * @see ServiceLoader
