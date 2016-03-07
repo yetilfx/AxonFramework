@@ -23,6 +23,8 @@ import java.lang.reflect.AccessibleObject;
  * Abstract implementation of the HandlerDefinition that uses annotations to recognise handler methods or constructors.
  * Annotations may return <code>Void.class</code> when the payload type is undefined (as <code>null</code> is not
  * allowed as a parameter value).
+ * 处理器定义（HandlerDefinition）抽象实现，可通过注解来辨别处理方法或构造器。
+ * 如果在和类型未定义，注解可以返回Void.class（Null不能作为参数值）
  *
  * @param <T> The type of annotation marking the members as handlers
  * @author Allard Buijze

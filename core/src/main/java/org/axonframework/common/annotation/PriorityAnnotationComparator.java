@@ -23,6 +23,7 @@ import java.util.Comparator;
 /**
  * Comparator that compares objects based on the value on an {@link org.axonframework.common.Priority @Priority}
  * annotation.
+ * 按照@Priority注解比较对象优先级的比较器（FIRST>HIGH>NEUTRAL>LOW>LAST）
  *
  * @param <T> The type of object to compare
  * @author Allard Buijze

@@ -34,6 +34,9 @@ import java.util.Map;
  * be resolved as a Spring bean if there is exactly one bean assignable to the parameter type. If multiple beans are
  * available and one is marked as primary, that bean is chosen. Note that when multiple beans are marked as primary,
  * either one can be selected as parameter value.
+ * 基于Spring的应用上下文（Application Context）注入的参数解析器工厂类的实现。可以将Spring Bean按照对应的参数类型来解析为对应的参数。
+ * 如果有多个相同参数类型的Spring Bean，则解析标注为Primary的。如果多个被同时标注为Primary，则仅能解析一个作为参数值。优先级低。
+ * 返回的解析器为内部私有的SpringBeanParameterResolver，返回的参数值为应用上下文中声明的Spring Bean
  *
  * @author Allard Buijze
  * @since 2.1

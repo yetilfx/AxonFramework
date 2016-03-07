@@ -50,9 +50,9 @@ public interface ParameterResolverFactory {
      * If the ParameterResolverFactory cannot provide a suitable ParameterResolver, returns <code>null</code>.
      * 如果参数解析器工厂不能提供适合的参数解析器，则返回Null
      *
-     * @param memberAnnotations    annotations placed on the member (e.g. method) 注解的成员（例如：方法）
-     * @param parameterType        the parameter type to find a resolver for 解析的参数类型
-     * @param parameterAnnotations annotations placed on the parameter 注解的参数
+     * @param memberAnnotations    annotations placed on the member (e.g. method) 成员的注解（例如：方法）
+     * @param parameterType        the parameter type to find a resolver for 期望解析的参数类型
+     * @param parameterAnnotations annotations placed on the parameter 参数注解
      * @return a suitable ParameterResolver, or <code>null</code> if none is found
      */
     ParameterResolver createInstance(Annotation[] memberAnnotations, Class<?> parameterType,

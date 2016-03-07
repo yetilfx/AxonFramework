@@ -27,7 +27,8 @@ import static org.axonframework.common.CollectionUtils.getAnnotation;
 /**
  * Factory for the default parameter resolvers. This factory is capable for providing parameter resolvers for Message,
  * MetaData and @MetaData annotated parameters.
- * 默认的参数解析器工厂。工厂为消息提供，按照元数据和元数据注解的参数来解析的参数解析器
+ * 默认的参数解析器工厂。工厂为消息提供，按照元数据和元数据注解的参数来解析的参数解析器。
+ * 解析器加载顺序，先消息解析、其次使用注解元数据参数解析、最后使用元数据参数解析
  *
  * @author Allard Buijze
  * @since 2.0
@@ -35,6 +36,13 @@ import static org.axonframework.common.CollectionUtils.getAnnotation;
 @Priority(Priority.FIRST)
 public class DefaultParameterResolverFactory implements ParameterResolverFactory {
 
+	/**
+	 * 1.优先依据期望参数类型，返回该参数类型对应的消息参数解析器（MessageParameterResolver），最终返回参数为消息本身；
+	 * 2.其次依据一组参数的注解中为MetaData类型的注解，创建元数据注解参数解析器（AnnotatedMetaDataParameterResolver），
+	 * 最终返回消息中元数据，于参数的元数据注解值匹配的Key的，消息元数据值；
+	 * 3.最后,当上述均不成立时，按照期望参数类型，返回对应的元数据参数解析器(MetaDataParameterResolver),最终返回消息的元数据
+	 * 
+	 */
     @Override
     public ParameterResolver createInstance(Annotation[] methodAnnotations, Class<?> parameterType,
                                             Annotation[] parameterAnnotations) {

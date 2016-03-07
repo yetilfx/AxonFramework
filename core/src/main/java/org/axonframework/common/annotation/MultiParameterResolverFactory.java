@@ -24,6 +24,7 @@ import java.util.List;
 
 /**
  * ParameterResolverFactory instance that delegates to multiple other instances, in the order provided.
+ * 该实例被用于代理多个其它实例，并按顺序提供
  *
  * @author Allard Buijze
  * @since 2.1
@@ -36,9 +37,12 @@ public class MultiParameterResolverFactory implements ParameterResolverFactory {
      * Creates a MultiParameterResolverFactory instance with the given <code>delegates</code>, which are automatically
      * ordered based on the {@link org.axonframework.common.Priority @Priority} annotation on their respective classes.
      * Classes with the same Priority are kept in the order as provided in the <code>delegates</code>.
+     * 创建一个代理多个给定参数解析器工厂类的，MultiParameterResolverFactory实例。其将自动排序按照被委托的类上标注的“@Priority”注解，进行排序。
+     * 相同优先级的则保持原有的加载顺序。
      * <p/>
      * If one of the delegates is a MultiParameterResolverFactory itself, that factory's delegates are 'mixed' with
      * the given <code>delegates</code>, based on their respective order.
+     * 如果代理中也包含与自己相同的实例，则按照他们各自的顺序混排在一起。
      *
      * @param delegates The delegates to include in the factory
      * @return an instance delegating to the given <code>delegates</code>
@@ -82,6 +86,11 @@ public class MultiParameterResolverFactory implements ParameterResolverFactory {
         this.factories = delegates.toArray(new ParameterResolverFactory[delegates.size()]);
     }
 
+    /**
+     * 用于解决被代理的参数解析工厂中还有同样的MultiParameterResolverFactory实例则混排在一起
+     * @param factories
+     * @return
+     */
     private static ParameterResolverFactory[] flatten(List<ParameterResolverFactory> factories) {
         List<ParameterResolverFactory> flattened = new ArrayList<ParameterResolverFactory>(factories.size());
         for (ParameterResolverFactory parameterResolverFactory : factories) {
@@ -97,7 +106,7 @@ public class MultiParameterResolverFactory implements ParameterResolverFactory {
 
     /**
      * Returns the delegates of this instance, in the order they are evaluated to resolve parameters.
-     *
+     * 排序后返回第一个可用的参数解析器
      * @return the delegates of this instance, in the order they are evaluated to resolve parameters
      */
     public List<ParameterResolverFactory> getDelegates() {

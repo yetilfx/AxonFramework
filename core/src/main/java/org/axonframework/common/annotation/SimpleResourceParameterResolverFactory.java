@@ -6,6 +6,8 @@ import java.lang.annotation.Annotation;
 
 /**
  * ParameterResolverFactory implementation that resolves parameters for a specific given Resource.
+ * 按照指定的资源解析参数的参数解析器工厂类实现（依赖于FixedValueParameterResolver-固定值参数解析器），
+ * 返回的参数值为给定的资源对象
  *
  * @author Allard Buijze
  * @since 2.4.2

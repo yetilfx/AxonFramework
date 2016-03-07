@@ -21,7 +21,9 @@ import org.axonframework.domain.Message;
 /**
  * ParameterResolver implementation that injects a fixed value. Useful for injecting parameter values that do not rely
  * on information contained in the incoming message itself.
- *
+ * 返回固定注入值得参数解析器实现。用于注入固定的参数值，而不依赖于消息本身。
+ * SimpleResourceParameterResolverFactory中使用，将资源对象直接返回作为参数。
+ * 
  * @param <T> The type of value resolved by this parameter
  * @author Allard Buijze
  * @since 2.0
