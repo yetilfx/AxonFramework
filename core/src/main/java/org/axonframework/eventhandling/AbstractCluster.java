@@ -31,16 +31,17 @@ import java.util.concurrent.CopyOnWriteArraySet;
  * Abstract {@code Cluster} implementation that keeps track of Cluster members ({@link EventListener EventListeners}).
  * This implementation is thread-safe. The {@link #getMembers()} method returns a read-only runtime view of the members
  * in the cluster.
- *
+ * Cluster抽象实现，用于保持对Cluster中事件监听器的跟踪。这个实现是线程安全的。
+ * getMembers方法返回一个群组中只读的运行时视图。
  * @author Allard Buijze
  * @since 1.2
  */
 public abstract class AbstractCluster implements Cluster {
 
-    private final String name;
-    private final Set<EventListener> eventListeners;
-    private final Set<EventListener> immutableEventListeners;
-    private final ClusterMetaData clusterMetaData = new DefaultClusterMetaData();
+    private final String name;//群组名称
+    private final Set<EventListener> eventListeners;//该群的事件监听器集合
+    private final Set<EventListener> immutableEventListeners;//不可变的事件监听器集合
+    private final ClusterMetaData clusterMetaData = new DefaultClusterMetaData();//集合的原数据，默认值为默认的集合原数据
     private final EventProcessingMonitorCollection subscribedMonitors = new EventProcessingMonitorCollection();
     private final MultiplexingEventProcessingMonitor eventProcessingMonitor = new MultiplexingEventProcessingMonitor(subscribedMonitors);
 
