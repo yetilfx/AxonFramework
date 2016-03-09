@@ -41,8 +41,8 @@ public abstract class AbstractCluster implements Cluster {
     private final String name;//群组名称
     private final Set<EventListener> eventListeners;//该群的事件监听器集合
     private final Set<EventListener> immutableEventListeners;//不可变的事件监听器集合
-    private final ClusterMetaData clusterMetaData = new DefaultClusterMetaData();//集合的原数据，默认值为默认的集合原数据
-    private final EventProcessingMonitorCollection subscribedMonitors = new EventProcessingMonitorCollection();
+    private final ClusterMetaData clusterMetaData = new DefaultClusterMetaData();//集合的原数据，默认值为默认的集合原数据（一个允许null值的ConcurrentHashMap）
+    private final EventProcessingMonitorCollection subscribedMonitors = new EventProcessingMonitorCollection();//事件处理监视器集合
     private final MultiplexingEventProcessingMonitor eventProcessingMonitor = new MultiplexingEventProcessingMonitor(subscribedMonitors);
 
     /**
