@@ -22,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Default implementation of ClusterMetaData. It is backed by a ConcurrentHashMap but allows the storage of {@code
  * null} values. {@code null} keys are not allowed.
- *
+ * 群组原数据（ClusterMetaData）的默认实现。基于ConcurrentHashMap实现，但是允许存储Null值，但不可把null作为key
  * @author Allard Buijze
  * @since 1.2
  */
