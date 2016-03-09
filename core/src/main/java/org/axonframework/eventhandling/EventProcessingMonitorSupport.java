@@ -18,10 +18,12 @@ package org.axonframework.eventhandling;
 
 /**
  * Interface indicating that the implementing class is capable of notifying monitors when event processing completes.
+ * 接口表明实现类当事件处理完成时可以通知监视器
  * <p/>
  * This interface should be implemented by all event handling components that are capable of processing events
  * asynchronously.
- *
+ * 此接口应该由所有事件处理组件来实现，该组件能够异步处理事件。
+ * 
  * @author Allard Buijze
  * @since 2.1
  */
@@ -29,7 +31,7 @@ public interface EventProcessingMonitorSupport {
 
     /**
      * Subscribes the given <code>monitor</code>. If the monitor is already subscribed, nothing happens.
-     *
+     * 订阅给定的监视器。如果监视器已经被订阅，则不做任何处理
      * @param monitor The monitor to subscribe
      */
     void subscribeEventProcessingMonitor(EventProcessingMonitor monitor);
@@ -37,7 +39,7 @@ public interface EventProcessingMonitorSupport {
     /**
      * Unsubscribed the given <code>monitor</code>. If the monitor was not subscribed, or was already unsubscribed,
      * nothing happens.
-     *
+     *	取消订阅给定的监视器。如果监视器没有被订阅或者已经被取消订阅，则不会做任何处理
      * @param monitor The monitor to unsubscribe
      */
     void unsubscribeEventProcessingMonitor(EventProcessingMonitor monitor);

@@ -24,6 +24,7 @@ import java.util.Set;
  * A cluster represents a group of Event Listeners that are treated as a single group by the {@link
  * ClusteringEventBus}. This allows attributes and behavior (e.g. transaction management, asynchronous processing,
  * distribution) to be applied over a whole group at once.
+ * cluster 是被ClusteringEventBus处理为一组的事件监听器。这样就可以把属性和动作同时应用到一组事件监听器上。
  *
  * @author Allard Buijze
  * @since 1.2
@@ -34,6 +35,7 @@ public interface Cluster extends EventProcessingMonitorSupport {
      * Returns the name of this cluster. This name is used to detect distributed instances of the
      * same cluster. Multiple instances referring to the same logical cluster (on different JVM's) must have the same
      * name.
+     * 返回群组名称。此名称用于检测同一群组的分布式实例。同一逻辑簇多个实例（在不同的JVM的）必须有相同的名字。
      *
      * @return the name of this cluster
      */
@@ -41,11 +43,12 @@ public interface Cluster extends EventProcessingMonitorSupport {
 
     /**
      * Publishes the given Events to the members of this cluster.
+     * 发布给定的事件到群组的成员
      * <p/>
      * Implementations may do this synchronously or asynchronously. Although {@link EventListener EventListeners} are
      * discouraged to throw exceptions, it is possible that they are propagated through this method invocation. In that
      * case, no guarantees can be given about the delivery of Events at all Cluster members.
-     *
+     * 实现可以是同步或异步
      * @param events The Events to publish in the cluster
      */
     void publish(EventMessage... events);

@@ -24,7 +24,9 @@ import java.util.List;
  * Interface describing a mechanism that listens for the results of events being processed. When subscribed to an
  * object implementing {@link org.axonframework.eventhandling.EventProcessingMonitorSupport}, the monitor will be
  * notified when events have been processed.
- *
+ * 事件处理监视器接口，该接口描述了一种机制，用于监听事件处理的结果。
+ * 当订阅某个实现了EventProcessingMonitorSupport的对象时，当事件处理完该监视器将收到通知。
+ * 
  * @author Allard Buijze
  * @since 2.1
  */
