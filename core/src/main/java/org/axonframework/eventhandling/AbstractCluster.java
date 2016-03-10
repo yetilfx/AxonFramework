@@ -41,28 +41,28 @@ public abstract class AbstractCluster implements Cluster {
     private final String name;//群组名称
     private final Set<EventListener> eventListeners;//该群的事件监听器集合
     private final Set<EventListener> immutableEventListeners;//不可变的事件监听器集合
-    private final ClusterMetaData clusterMetaData = new DefaultClusterMetaData();//集合的原数据，默认值为默认的集合原数据（一个允许null值的ConcurrentHashMap）
+    private final ClusterMetaData clusterMetaData = new DefaultClusterMetaData();//群组的原数据，默认值为默认的集合原数据（一个允许null值的ConcurrentHashMap）
     private final EventProcessingMonitorCollection subscribedMonitors = new EventProcessingMonitorCollection();//事件处理监视器集合
     private final MultiplexingEventProcessingMonitor eventProcessingMonitor = new MultiplexingEventProcessingMonitor(subscribedMonitors);
 
     /**
      * Initializes the cluster with given <code>name</code>. The order in which listeners are organized in the cluster
      * is undefined.
-     *
+     * 使用群组的名称初始化群组。群组中的监听器顺序是未定义的。
      * @param name The name of this cluster
      */
     protected AbstractCluster(String name) {
         Assert.notNull(name, "name may not be null");
         this.name = name;
         eventListeners = new CopyOnWriteArraySet<EventListener>();
-        immutableEventListeners = Collections.unmodifiableSet(eventListeners);
+        immutableEventListeners = Collections.unmodifiableSet(eventListeners);//创建只读的监听器集合对象，防止外部修改
     }
 
     /**
      * Initializes the cluster with given <code>name</code>, using given <code>comparator</code> to order the listeners
      * in the cluster. The order of invocation of the members in this cluster is according the order provided by the
      * comparator.
-     *
+     * 使用群组名称和比较器来来初始化群组，且将监听器排序。群组成员的调用顺序按照比较器提供的排序顺序执行
      * @param name       The name of this cluster
      * @param comparator The comparator providing the ordering of the Event Listeners
      */
@@ -84,6 +84,8 @@ public abstract class AbstractCluster implements Cluster {
      * live view on the memberships of the cluster. Any subscription changes are immediately visible in this set.
      * Iterators created on the set iterate over an immutable view reflecting the state at the moment the iterator was
      * created.
+     * 将一组事件发布给一组给定的事件监听器，同时在完成后通知事件监视器。群组中的事件监听器是动态的。任何订阅变化都会被立即呈现在群组中。
+     * 迭代器遍历时通过不可变的集合视图
      * <p/>
      * When this method is invoked as part of a Unit of Work (see
      * {@link org.axonframework.unitofwork.CurrentUnitOfWork#isStarted()}), the monitor invocation should be postponed
