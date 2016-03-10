@@ -91,6 +91,7 @@ public abstract class AbstractCluster implements Cluster {
      * {@link org.axonframework.unitofwork.CurrentUnitOfWork#isStarted()}), the monitor invocation should be postponed
      * until the Unit of Work is committed or rolled back, to ensure any transactions are properly propagated when the
      * monitor is invoked.
+     * 当这个方法被作为工作单元一部分调用时，监视器调用将被推迟，直到工作单元提交或者回滚，从而确保所有事物被正确传播，当监视器被调用时。
      * <p/>
      * It is the implementation's responsibility to ensure that &ndash;eventually&ndash; the each of the given
      * <code>events</code> is provided to the <code>eventProcessingMonitor</code>, either to the {@link
