@@ -21,6 +21,7 @@ package org.axonframework.eventhandling;
  * Event Listener implementation. Typically, this occurs when annotated event handlers are used. The {@link
  * #doSelectCluster(org.axonframework.eventhandling.EventListener, Class)} method, in such case, returns the Class of
  * the annotated listener.
+ *	
  *
  * @author Allard Buijze
  * @since 2.0

@@ -21,6 +21,7 @@ package org.axonframework.eventhandling;
  * selector does *not* need to subscribe the listener to that cluster.
  * <p/>
  * <em>Thread safety note:</em> The implementation is expected to be thread safe.
+ * 群组选择器接口：提供了分配订阅监听器到群组实例的机制。选择器不需要订阅该群组的监听器。
  *
  * @author Allard Buijze
  * @since 1.2
@@ -30,8 +31,10 @@ public interface ClusterSelector {
     /**
      * Selects the cluster instance that the given {@code eventListener} should be member of. This may be an existing
      * (or pre-configured) cluster, as well as a newly created cluster.
+     * 选择含有对应监听器成员的群组。可能是一个已经存在的集群，也可能是创建一个新的集群。
      * <p/>
      * When {@code null} is returned, this may cause the Event Listener not to be subscribed to any cluster at all.
+     * 当返回Null时，这可能造成事件监听器无法订阅到全部任何集群
      *
      * @param eventListener the event listener to select a cluster for
      * @return The Cluster assigned to the listener

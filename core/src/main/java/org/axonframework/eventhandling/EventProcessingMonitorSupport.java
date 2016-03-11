@@ -18,7 +18,8 @@ package org.axonframework.eventhandling;
 
 /**
  * Interface indicating that the implementing class is capable of notifying monitors when event processing completes.
- * 接口表明实现类当事件处理完成时可以通知监视器
+ * 事件处理监视器支持接口：当事件处理完成时，此接口的实现类有能力可以通知监视器。包括订阅和取消订阅事件监视器。
+ * 实现类：EventProcessingMonitorCollection
  * <p/>
  * This interface should be implemented by all event handling components that are capable of processing events
  * asynchronously.

@@ -20,6 +20,7 @@ import org.axonframework.domain.DomainEventMessage;
 
 /**
  * Interface describing objects capable of creating instances of aggregates to be initialized with an event stream.
+ * 实现该接口的对象具备一个事件流中
  * <p/>
  * Implementation note: to make sure an implementation handles snapshot events correctly, extends the {@link
  * AbstractAggregateFactory} instead.

@@ -98,10 +98,11 @@ public abstract class AbstractCluster implements Cluster {
      * org.axonframework.eventhandling.EventProcessingMonitor#onEventProcessingCompleted(java.util.List)} or the {@link
      * org.axonframework.eventhandling.EventProcessingMonitor#onEventProcessingFailed(java.util.List, Throwable)}
      * method.
+     * 这个实现会确保每个事件会提交给事件处理监视器，或者事件处理完成（onEventProcessingCompleted）或者事件处理失败（onEventProcessingFailed）
      *
-     * @param events                 The events to publish
-     * @param eventListeners         The event listeners subscribed at the moment the event arrived
-     * @param eventProcessingMonitor The monitor to notify after completion.
+     * @param events                 The events to publish //发布的事件
+     * @param eventListeners         The event listeners subscribed at the moment the event arrived //事件到达时订阅的事件监听器
+     * @param eventProcessingMonitor The monitor to notify after completion. //事件完成后被通知的事件监视器
      */
     protected abstract void doPublish(List<EventMessage> events, Set<EventListener> eventListeners,
                                       MultiplexingEventProcessingMonitor eventProcessingMonitor);
