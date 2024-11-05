@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2010-2014. Axon Framework
+ * Copyright (c) 2010-2022. Axon Framework
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -32,12 +32,12 @@ public abstract class DescriptionUtils {
     }
 
     /**
-     * Describe the contents of the given <code>list</code> in the given <code>description</code>.
+     * Describe the contents of the given {@code list} in the given {@code description}.
      *
      * @param list        The list to describe
      * @param description The description to describe to
      */
-    static void describe(List<?> list, Description description) {
+    public static void describe(List<?> list, Description description) {
         int counter = 0;
         description.appendText("List with ");
         for (Object item : list) {

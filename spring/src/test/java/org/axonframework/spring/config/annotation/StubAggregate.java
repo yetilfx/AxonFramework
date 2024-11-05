@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2010-2012. Axon Framework
+ * Copyright (c) 2010-2018. Axon Framework
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,17 +16,18 @@
 
 package org.axonframework.spring.config.annotation;
 
+import org.axonframework.modelling.command.AggregateIdentifier;
+import org.axonframework.eventhandling.DomainEventMessage;
 import org.axonframework.eventhandling.EventMessage;
-import org.axonframework.eventsourcing.DomainEventMessage;
-import org.axonframework.eventsourcing.GenericDomainEventMessage;
-import org.axonframework.eventsourcing.annotation.AggregateIdentifier;
-import org.axonframework.eventsourcing.annotation.EventSourcingHandler;
-import org.axonframework.messaging.metadata.MetaData;
+import org.axonframework.eventhandling.GenericDomainEventMessage;
+import org.axonframework.eventsourcing.EventSourcingHandler;
+import org.axonframework.messaging.MetaData;
+import org.axonframework.spring.utils.StubDomainEvent;
 
 import java.util.UUID;
 
-import static org.axonframework.commandhandling.model.AggregateLifecycle.apply;
-import static org.axonframework.commandhandling.model.AggregateLifecycle.markDeleted;
+import static org.axonframework.modelling.command.AggregateLifecycle.apply;
+import static org.axonframework.modelling.command.AggregateLifecycle.markDeleted;
 
 /**
  * @author Allard Buijze
@@ -36,14 +37,14 @@ public class StubAggregate {
     private int invocationCount;
 
     @AggregateIdentifier
-    private Object identifier;
+    private String identifier;
 
     public StubAggregate() {
-        identifier = UUID.randomUUID();
+        identifier = UUID.randomUUID().toString();
     }
 
     public StubAggregate(Object identifier) {
-        this.identifier = identifier;
+        this.identifier = identifier.toString();
     }
 
     public void doSomething() {
@@ -61,8 +62,8 @@ public class StubAggregate {
     }
 
     public DomainEventMessage createSnapshotEvent() {
-        return new GenericDomainEventMessage<>(identifier.toString(), (long) 5,
-                                                              new StubDomainEvent(), MetaData.emptyInstance());
+        return new GenericDomainEventMessage<>("test", identifier, (long) 5,
+                                               new StubDomainEvent(), MetaData.emptyInstance());
     }
 
     public void delete() {

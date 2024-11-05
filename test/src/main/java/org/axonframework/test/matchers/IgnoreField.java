@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2010-2015. Axon Framework
+ * Copyright (c) 2010-2022. Axon Framework
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -31,7 +31,7 @@ public class IgnoreField implements FieldFilter {
     private Field ignoredField;
 
     /**
-     * Initialize an instance that ignores the given <code>field</code>
+     * Initialize an instance that ignores the given {@code field}
      *
      * @param field The field to ignore
      */
@@ -40,9 +40,9 @@ public class IgnoreField implements FieldFilter {
     }
 
     /**
-     * Initialize an instance that ignores the a field with given <code>fieldName</code>, which is declared on the
+     * Initialize an instance that ignores the a field with given {@code fieldName}, which is declared on the
      * given
-     * <code>clazz</code>.
+     * {@code clazz}.
      *
      * @param clazz     The type that declares the field
      * @param fieldName The name of the field

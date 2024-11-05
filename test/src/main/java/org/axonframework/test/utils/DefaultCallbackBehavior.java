@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2010-2014. Axon Framework
+ * Copyright (c) 2010-2022. Axon Framework
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,12 +16,14 @@
 
 package org.axonframework.test.utils;
 
-import org.axonframework.messaging.metadata.MetaData;
+import org.axonframework.commandhandling.CommandResultMessage;
+import org.axonframework.messaging.MetaData;
 
 /**
- * Default implementation of the CallbackBehavior interface. This implementation always returns <code>null</code>,
- * which results in the {@link org.axonframework.commandhandling.CommandCallback#onSuccess(org.axonframework.commandhandling.CommandMessage, Object)} method to be
- * invoked with a <code>null</code> result parameter.
+ * Default implementation of the CallbackBehavior interface. This implementation always returns {@code null}, which
+ * results in the {@link org.axonframework.commandhandling.CommandCallback#onResult(org.axonframework.commandhandling.CommandMessage,
+ * CommandResultMessage)} method to be invoked with a {@code null} result
+ * parameter.
  *
  * @author Allard Buijze
  * @since 2.0
@@ -29,7 +31,7 @@ import org.axonframework.messaging.metadata.MetaData;
 public class DefaultCallbackBehavior implements CallbackBehavior {
 
     @Override
-    public Object handle(Object commandPayload, MetaData commandMetaData) throws Exception {
+    public Object handle(Object commandPayload, MetaData commandMetaData) {
         return null;
     }
 }

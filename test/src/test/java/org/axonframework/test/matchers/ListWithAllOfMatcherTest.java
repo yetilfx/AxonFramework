@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2010-2012. Axon Framework
+ * Copyright (c) 2010-2022. Axon Framework
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,33 +20,32 @@ import org.axonframework.eventhandling.EventMessage;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.StringDescription;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
+import org.junit.jupiter.api.*;
+import org.mockito.invocation.*;
+import org.mockito.stubbing.*;
 
 import java.util.Arrays;
 import java.util.List;
 
 import static org.axonframework.test.matchers.Matchers.listWithAllOf;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 /**
  * @author Allard Buijze
  */
-public class ListWithAllOfMatcherTest {
+class ListWithAllOfMatcherTest {
 
-    private Matcher<EventMessage> mockMatcher1;
-    private Matcher<EventMessage> mockMatcher2;
-    private Matcher<EventMessage> mockMatcher3;
-    private Matcher<List<?>> testSubject;
+    private Matcher<EventMessage<?>> mockMatcher1;
+    private Matcher<EventMessage<?>> mockMatcher2;
+    private Matcher<EventMessage<?>> mockMatcher3;
+    private Matcher<List<EventMessage<?>>> testSubject;
     private StubEvent stubEvent1;
     private StubEvent stubEvent2;
 
     @SuppressWarnings({"unchecked"})
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         mockMatcher1 = mock(Matcher.class);
         mockMatcher2 = mock(Matcher.class);
         mockMatcher3 = mock(Matcher.class);
@@ -59,7 +58,7 @@ public class ListWithAllOfMatcherTest {
     }
 
     @Test
-    public void testMatch_FullMatch() {
+    void match_FullMatch() {
         assertTrue(testSubject.matches(Arrays.asList(stubEvent1, stubEvent2)));
 
         verify(mockMatcher1).matches(stubEvent1);
@@ -71,7 +70,7 @@ public class ListWithAllOfMatcherTest {
     }
 
     @Test
-    public void testMatch_OnlyOneEventMatches() {
+    void match_OnlyOneEventMatches() {
         when(mockMatcher1.matches(stubEvent1)).thenReturn(false);
         when(mockMatcher2.matches(stubEvent1)).thenReturn(false);
         when(mockMatcher3.matches(stubEvent1)).thenReturn(false);
@@ -87,7 +86,7 @@ public class ListWithAllOfMatcherTest {
     }
 
     @Test
-    public void testMatch_OneMatcherDoesNotMatch() {
+    void match_OneMatcherDoesNotMatch() {
         when(mockMatcher1.matches(any())).thenReturn(false);
         when(mockMatcher2.matches(stubEvent1)).thenReturn(false);
         when(mockMatcher3.matches(stubEvent1)).thenReturn(false);
@@ -99,7 +98,7 @@ public class ListWithAllOfMatcherTest {
     }
 
     @Test
-    public void testDescribe() {
+    void describe() {
         testSubject.matches(Arrays.asList(stubEvent1, stubEvent2));
 
         doAnswer(new DescribingAnswer("A")).when(mockMatcher1).describeTo(isA(Description.class));
@@ -112,7 +111,7 @@ public class ListWithAllOfMatcherTest {
     }
 
     @Test
-    public void testDescribe_OneMatcherFailed() {
+    void describe_OneMatcherFailed() {
         when(mockMatcher2.matches(any())).thenReturn(false);
 
         testSubject.matches(Arrays.asList(stubEvent1, stubEvent2));
@@ -129,12 +128,12 @@ public class ListWithAllOfMatcherTest {
     private static class DescribingAnswer implements Answer<Object> {
         private String description;
 
-        public DescribingAnswer(String description) {
+        DescribingAnswer(String description) {
             this.description = description;
         }
 
         @Override
-        public Object answer(InvocationOnMock invocation) throws Exception {
+        public Object answer(InvocationOnMock invocation) {
             Description descriptionParameter = (Description) invocation.getArguments()[0];
             descriptionParameter.appendText(this.description);
             return Void.class;

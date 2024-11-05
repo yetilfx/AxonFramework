@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2010-2015. Axon Framework
+ * Copyright (c) 2010-2022. Axon Framework
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,35 +17,34 @@
 package org.axonframework.test.matchers;
 
 import org.axonframework.test.FixtureExecutionException;
-import org.junit.*;
+import org.junit.jupiter.api.*;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author Allard Buijze
  */
-public class IgnoreFieldTest {
+class IgnoreFieldTest {
 
     @SuppressWarnings("unused") private String field;
     @SuppressWarnings("unused") private String ignoredField;
 
     @Test
-    public void testAcceptOtherFields_ClassStringConstructor() throws Exception {
+    void acceptOtherFields_ClassStringConstructor() throws Exception {
         IgnoreField testSubject = new IgnoreField(IgnoreFieldTest.class, "ignoredField");
         assertTrue(testSubject.accept(IgnoreFieldTest.class.getDeclaredField("field")));
         assertFalse(testSubject.accept(IgnoreFieldTest.class.getDeclaredField("ignoredField")));
     }
 
     @Test
-    public void testAcceptOtherFields_FieldConstructor() throws Exception {
+    void acceptOtherFields_FieldConstructor() throws Exception {
         IgnoreField testSubject = new IgnoreField(IgnoreFieldTest.class.getDeclaredField("ignoredField"));
         assertTrue(testSubject.accept(IgnoreFieldTest.class.getDeclaredField("field")));
         assertFalse(testSubject.accept(IgnoreFieldTest.class.getDeclaredField("ignoredField")));
     }
 
-    @Test(expected = FixtureExecutionException.class)
-    public void testRejectNonExistentField() {
-        new IgnoreField(IgnoreFieldTest.class, "nonExistent");
+    @Test
+    void rejectNonExistentField() {
+        assertThrows(FixtureExecutionException.class, () -> new IgnoreField(IgnoreFieldTest.class, "nonExistent"));
     }
 }

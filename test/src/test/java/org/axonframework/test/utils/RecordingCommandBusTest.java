@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2010-2012. Axon Framework
+ * Copyright (c) 2010-2022. Axon Framework
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,44 +16,38 @@
 
 package org.axonframework.test.utils;
 
-import org.axonframework.commandhandling.CommandCallback;
 import org.axonframework.commandhandling.CommandMessage;
 import org.axonframework.commandhandling.GenericCommandMessage;
 import org.axonframework.messaging.MessageHandler;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.*;
 
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author Allard Buijze
  */
-public class RecordingCommandBusTest {
+class RecordingCommandBusTest {
 
     private RecordingCommandBus testSubject;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() {
         testSubject = new RecordingCommandBus();
     }
 
     @Test
-    public void testPublishCommand() {
+    void publishCommand() {
         testSubject.dispatch(GenericCommandMessage.asCommandMessage("First"));
-        testSubject.dispatch(GenericCommandMessage.asCommandMessage("Second"), new CommandCallback<Object, Object>() {
-            @Override
-            public void onSuccess(CommandMessage<?> commandMessage, Object result) {
-                assertNull("Expected default callback behavior to invoke onSuccess(null)", result);
-            }
-
-            @Override
-            public void onFailure(CommandMessage<?> commandMessage, Throwable cause) {
-                fail("Didn't expect callack to be invoked");
-            }
-        });
-        //noinspection AssertEqualsBetweenInconvertibleTypes
+        testSubject.dispatch(GenericCommandMessage.asCommandMessage("Second"),
+                             (commandMessage, commandResultMessage) -> {
+                                 if (commandResultMessage.isExceptional()) {
+                                     fail("Didn't expect handling to fail");
+                                 }
+                                 assertNull(commandResultMessage.getPayload(),
+                                         "Expected default callback behavior to invoke onResult(null)");
+                             });
         List<CommandMessage<?>> actual = testSubject.getDispatchedCommands();
         assertEquals(2, actual.size());
         assertEquals("First", actual.get(0).getPayload());
@@ -61,21 +55,16 @@ public class RecordingCommandBusTest {
     }
 
     @Test
-    public void testPublishCommandWithCallbackBehavior() {
+    void publishCommandWithCallbackBehavior() {
         testSubject.setCallbackBehavior((commandPayload, commandMetaData) -> "callbackResult");
         testSubject.dispatch(GenericCommandMessage.asCommandMessage("First"));
-        testSubject.dispatch(GenericCommandMessage.asCommandMessage("Second"), new CommandCallback<Object, Object>() {
-            @Override
-            public void onSuccess(CommandMessage<?> commandMessage, Object result) {
-                assertEquals("callbackResult", result);
-            }
-
-            @Override
-            public void onFailure(CommandMessage<?> commandMessage, Throwable cause) {
-                fail("Didn't expect callack to be invoked");
-            }
-        });
-        //noinspection AssertEqualsBetweenInconvertibleTypes
+        testSubject.dispatch(GenericCommandMessage.asCommandMessage("Second"),
+                             (commandMessage, commandResultMessage) -> {
+                                 if (commandResultMessage.isExceptional()) {
+                                    fail("Didn't expect handling to fail");
+                                 }
+                                 assertEquals("callbackResult", commandResultMessage.getPayload());
+                             });
         List<CommandMessage<?>> actual = testSubject.getDispatchedCommands();
         assertEquals(2, actual.size());
         assertEquals("First", actual.get(0).getPayload());
@@ -83,8 +72,8 @@ public class RecordingCommandBusTest {
     }
 
     @Test
-    public void testRegisterHandler() {
-        MessageHandler<? super CommandMessage<?>> handler = (command, unitOfWork) -> {
+    void registerHandler() {
+        MessageHandler<? super CommandMessage<?>> handler = command -> {
             fail("Did not expect handler to be invoked");
             return null;
         };

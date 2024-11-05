@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2010-2014. Axon Framework
+ * Copyright (c) 2010-2022. Axon Framework
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,10 +16,10 @@
 
 package org.axonframework.spring.eventhandling.scheduling.java;
 
+import org.axonframework.common.AxonThreadFactory;
 import org.axonframework.eventhandling.EventBus;
 import org.axonframework.eventhandling.scheduling.java.SimpleEventScheduler;
-import org.axonframework.messaging.unitofwork.DefaultUnitOfWorkFactory;
-import org.axonframework.spring.unitofwork.SpringTransactionManager;
+import org.axonframework.spring.messaging.unitofwork.SpringTransactionManager;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.FactoryBean;
@@ -32,6 +32,7 @@ import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import javax.annotation.Nonnull;
 
 /**
  * Spring FactoryBean that creates a SimpleEventScheduler instance using resources found in the Spring Application
@@ -56,7 +57,7 @@ public class SimpleEventSchedulerFactoryBean implements FactoryBean<SimpleEventS
     private TransactionDefinition transactionDefinition = new DefaultTransactionDefinition();
 
     @Override
-    public SimpleEventScheduler getObject() throws Exception {
+    public SimpleEventScheduler getObject() {
         return eventScheduler;
     }
 
@@ -71,24 +72,29 @@ public class SimpleEventSchedulerFactoryBean implements FactoryBean<SimpleEventS
     }
 
     @Override
-    public void afterPropertiesSet() throws Exception {
+    public void afterPropertiesSet() {
         if (executorService == null) {
-            executorService = Executors.newSingleThreadScheduledExecutor();
+            executorService = Executors.newSingleThreadScheduledExecutor(new AxonThreadFactory(SimpleEventSchedulerFactoryBean.class.getSimpleName()));
             executorServiceToShutDown = executorService;
         }
         if (eventBus == null) {
             eventBus = applicationContext.getBean(EventBus.class);
         }
-        if (transactionManager == null) {
-            this.eventScheduler = new SimpleEventScheduler(executorService, eventBus);
-        } else {
-            this.eventScheduler = new SimpleEventScheduler(executorService, eventBus, new DefaultUnitOfWorkFactory(
-                    new SpringTransactionManager(transactionManager, transactionDefinition)));
+
+        SimpleEventScheduler.Builder eventSchedulerBuilder =
+                SimpleEventScheduler.builder()
+                                    .scheduledExecutorService(executorService)
+                                    .eventBus(eventBus);
+        if (transactionManager != null) {
+            eventSchedulerBuilder.transactionManager(
+                    new SpringTransactionManager(transactionManager, transactionDefinition)
+            );
         }
+        this.eventScheduler = eventSchedulerBuilder.build();
     }
 
     @Override
-    public void destroy() throws Exception {
+    public void destroy() {
         if (executorServiceToShutDown != null) {
             executorServiceToShutDown.shutdown();
         }
@@ -137,7 +143,7 @@ public class SimpleEventSchedulerFactoryBean implements FactoryBean<SimpleEventS
     }
 
     @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+    public void setApplicationContext(@Nonnull ApplicationContext applicationContext) throws BeansException {
         this.applicationContext = applicationContext;
     }
 }

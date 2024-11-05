@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2010-2014. Axon Framework
+ * Copyright (c) 2010-2022. Axon Framework
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,7 +20,7 @@ import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 
 import java.lang.reflect.Field;
-import java.util.Arrays;
+import java.util.Objects;
 
 /**
  * Matcher that will match an Object if all the fields on that Object contain values equal to the same field in the
@@ -39,8 +39,8 @@ public class EqualFieldsMatcher<T> extends BaseMatcher<T> {
     private Object failedFieldActualValue;
 
     /**
-     * Initializes an EqualFieldsMatcher that will match an object with equal properties as the given
-     * <code>expected</code> object.
+     * Initializes an EqualFieldsMatcher that will match an object with equal properties as the given {@code expected}
+     * object.
      *
      * @param expected The expected object
      */
@@ -49,8 +49,8 @@ public class EqualFieldsMatcher<T> extends BaseMatcher<T> {
     }
 
     /**
-     * Initializes an EqualFieldsMatcher that will match an object with equal properties as the given
-     * <code>expected</code> object.
+     * Initializes an EqualFieldsMatcher that will match an object with equal properties as the given {@code expected}
+     * object.
      *
      * @param expected The expected object
      * @param filter   The filter describing the fields to include in the comparison
@@ -60,10 +60,9 @@ public class EqualFieldsMatcher<T> extends BaseMatcher<T> {
         this.filter = filter;
     }
 
-    @SuppressWarnings({"unchecked"})
     @Override
-    public boolean matches(Object item) {
-        return expected.getClass().isInstance(item) && matchesSafely(item);
+    public boolean matches(Object actual) {
+        return expected.getClass().isInstance(actual) && matchesSafely(actual);
     }
 
     private boolean matchesSafely(Object actual) {
@@ -79,17 +78,7 @@ public class EqualFieldsMatcher<T> extends BaseMatcher<T> {
                 try {
                     Object expectedFieldValue = field.get(expectedValue);
                     Object actualFieldValue = field.get(actual);
-                    if (expectedFieldValue != null
-                            && actualFieldValue != null
-                            && expectedFieldValue.getClass().isArray()) {
-                        if (!Arrays.deepEquals(new Object[]{expectedFieldValue}, new Object[]{actualFieldValue})) {
-                            failedField = field;
-                            failedFieldExpectedValue = expectedFieldValue;
-                            failedFieldActualValue = actualFieldValue;
-                            return false;
-                        }
-                    } else if ((expectedFieldValue != null && !expectedFieldValue.equals(actualFieldValue))
-                            || (expectedFieldValue == null && actualFieldValue != null)) {
+                    if (!Objects.deepEquals(expectedFieldValue, actualFieldValue)) {
                         failedField = field;
                         failedFieldExpectedValue = expectedFieldValue;
                         failedFieldActualValue = actualFieldValue;
@@ -117,8 +106,8 @@ public class EqualFieldsMatcher<T> extends BaseMatcher<T> {
     }
 
     /**
-     * Returns the expected value of a failed field comparison, if any. This value is only populated after {@link
-     * #matches(Object)} is called and a mismatch has been detected.
+     * Returns the expected value of a failed field comparison, if any. This value is only populated after
+     * {@link #matches(Object)} is called and a mismatch has been detected.
      *
      * @return the expected value of the field that failed comparison, if any
      */
@@ -127,8 +116,8 @@ public class EqualFieldsMatcher<T> extends BaseMatcher<T> {
     }
 
     /**
-     * Returns the actual value of a failed field comparison, if any. This value is only populated after {@link
-     * #matches(Object)} is called and a mismatch has been detected.
+     * Returns the actual value of a failed field comparison, if any. This value is only populated after
+     * {@link #matches(Object)} is called and a mismatch has been detected.
      *
      * @return the actual value of the field that failed comparison, if any
      */

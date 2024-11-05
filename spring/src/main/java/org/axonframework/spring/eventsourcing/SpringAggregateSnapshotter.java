@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2010-2014. Axon Framework
+ * Copyright (c) 2010-2023. Axon Framework
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,107 +16,199 @@
 
 package org.axonframework.spring.eventsourcing;
 
-import org.axonframework.eventsourcing.AggregateFactory;
-import org.axonframework.eventsourcing.AggregateSnapshotter;
-import org.axonframework.eventsourcing.EventSourcingRepository;
-import org.axonframework.spring.unitofwork.SpringTransactionManager;
+import org.axonframework.common.AxonConfigurationException;
+import org.axonframework.common.transaction.TransactionManager;
+import org.axonframework.eventsourcing.*;
+import org.axonframework.eventsourcing.eventstore.EventStore;
+import org.axonframework.messaging.annotation.HandlerDefinition;
+import org.axonframework.messaging.annotation.ParameterResolverFactory;
+import org.axonframework.modelling.command.RepositoryProvider;
+import org.axonframework.tracing.SpanFactory;
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.support.DefaultTransactionDefinition;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import static org.springframework.beans.factory.BeanFactoryUtils.beansOfTypeIncludingAncestors;
+
+import java.util.Collections;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.Executor;
+import java.util.function.Function;
+import javax.annotation.Nonnull;
 
 /**
- * Implementation of the {@link org.axonframework.eventsourcing.AggregateSnapshotter} that eases the configuration when
- * used within a Spring Application Context. It will automatically detect a Transaction Manager and Aggregate
- * Factories.
- * <p/>
- * The only mandatory properties to set is {@link #setEventStore(org.axonframework.eventstore.SnapshotEventStore)}. In
- * most cases, you should also provide an executor, as the default will execute snapshotter tasks in the calling
- * thread.
+ * Snapshotter implementation that uses the AggregateRoot as state for the snapshot. Unlike the
+ * {@link AggregateSnapshotter}, this implementation lazily retrieves AggregateFactories from the Application
+ * Context when snapshot requests are made.
+ * <p>
+ * Instead of configuring directly, consider using the {@link SpringAggregateSnapshotterFactoryBean}, which
+ * configures this class using values available in the application context.
  *
  * @author Allard Buijze
- * @since 0.6
+ * @see SpringAggregateSnapshotterFactoryBean
+ * @since 3.0
  */
-public class SpringAggregateSnapshotter extends AggregateSnapshotter
-        implements InitializingBean, ApplicationContextAware {
+public class SpringAggregateSnapshotter extends AggregateSnapshotter implements ApplicationContextAware {
 
-    private PlatformTransactionManager transactionManager;
-    private boolean autoDetectAggregateFactories = true;
     private ApplicationContext applicationContext;
-    private TransactionDefinition transactionDefinition = new DefaultTransactionDefinition();
 
     /**
-     * Sets the transaction manager to manager underlying transaction with. If none is provided, an attempt is made to
-     * auto detect is from the application context. If a single transaction manager is found, it is used to manage
-     * transactions. Of none or more than one is found, they are ignored.
+     * Instantiate a {@link SpringAggregateSnapshotter} based on the fields contained in the {@link Builder}. The
+     * {@link AggregateFactory} instances are lazily retrieved by the {@link ApplicationContext}.
+     * <p>
+     * Will assert that the {@link EventStore}, {@link ParameterResolverFactory} and {@link HandlerDefinition} are not
+     * {@code null}, and will throw an {@link AxonConfigurationException} if any of them is {@code null}.
      *
-     * @param transactionManager the transaction manager managing underlying transactions
+     * @param builder the {@link Builder} used to instantiate a {@link SpringAggregateSnapshotter} instance
      */
-    public void setTransactionManager(PlatformTransactionManager transactionManager) {
-        this.transactionManager = transactionManager;
+    protected SpringAggregateSnapshotter(Builder builder) {
+        super(builder);
     }
 
     /**
-     * Optionally sets the transaction definition to use. By default, uses the application context's default
-     * transaction semantics (see {@link org.springframework.transaction.support.DefaultTransactionDefinition}).
+     * Instantiate a Builder to be able to create a {@link SpringAggregateSnapshotter}. The {@link AggregateFactory}
+     * instances are lazily retrieved by the {@link ApplicationContext}.
+     * <p>
+     * The {@link Executor} is defaulted to an {@link org.axonframework.common.DirectExecutor#INSTANCE}, the
+     * {@link TransactionManager} defaults to a {@link org.axonframework.common.transaction.NoTransactionManager} and
+     * the {@link SpanFactory} defaults to a {@link org.axonframework.tracing.NoOpSpanFactory}. Additionally, this
+     * Builder has convenience functions to default the {@link ParameterResolverFactory} and {@link HandlerDefinition}
+     * based on instances of these available on the classpath in case these are not provided (respectively
+     * {@link Builder#buildParameterResolverFactory()} and {@link Builder#buildHandlerDefinition()}). Upon instantiation
+     * of a {@link AggregateSnapshotter}, it is recommended to use these function to set those fields.
+     * <p>
+     * The {@link EventStore} is a <b>hard requirement</b> and as such should be provided.
      *
-     * @param transactionDefinition the transaction definition to use
+     * @return a Builder to be able to create a {@link SpringAggregateSnapshotter}
+     * @see org.axonframework.messaging.annotation.ClasspathParameterResolverFactory
+     * @see org.axonframework.messaging.annotation.ClasspathHandlerDefinition
      */
-    public void setTransactionDefinition(TransactionDefinition transactionDefinition) {
-        this.transactionDefinition = transactionDefinition;
+    public static Builder builder() {
+        return new Builder();
     }
 
-    @SuppressWarnings({"unchecked"})
     @Override
-    public void afterPropertiesSet() throws Exception {
-        if (autoDetectAggregateFactories) {
-            Set<AggregateFactory> factoriesFound = new HashSet<>();
-            factoriesFound.addAll(applicationContext.getBeansOfType(AggregateFactory.class).values());
-            Collection<EventSourcingRepository> eventSourcingRepositories =
-                    applicationContext.getBeansOfType(EventSourcingRepository.class).values();
-            for (EventSourcingRepository repo : eventSourcingRepositories) {
-                factoriesFound.add(repo.getAggregateFactory());
+    protected AggregateFactory<?> getAggregateFactory(Class<?> aggregateType) {
+        AggregateFactory<?> aggregateFactory = super.getAggregateFactory(aggregateType);
+        if (aggregateFactory == null) {
+            Optional<AggregateFactory> factory =
+                    beansOfTypeIncludingAncestors(applicationContext, AggregateFactory.class).values().stream()
+                                      .filter(af -> Objects.equals(af.getAggregateType(), aggregateType))
+                                      .findFirst();
+            if (!factory.isPresent()) {
+                factory = beansOfTypeIncludingAncestors(applicationContext, EventSourcingRepository.class).values().stream()
+                                            .map((Function<EventSourcingRepository, AggregateFactory>) EventSourcingRepository::getAggregateFactory)
+                                            .filter(af -> Objects.equals(af.getAggregateType(), aggregateType))
+                                            .findFirst();
+                if (factory.isPresent()) {
+                    aggregateFactory = factory.get();
+                    registerAggregateFactory(aggregateFactory);
+                }
             }
-            setAggregateFactories(new ArrayList(factoriesFound));
-        }
 
-        if (transactionManager == null) {
-            Map<String, PlatformTransactionManager> candidates = applicationContext.getBeansOfType(
-                    PlatformTransactionManager.class);
-            if (candidates.size() == 1) {
-                this.transactionManager = candidates.values().iterator().next();
+            if (factory.isPresent()) {
+                aggregateFactory = factory.get();
+                registerAggregateFactory(aggregateFactory);
             }
         }
-        if (transactionManager != null) {
-            setTxManager(new SpringTransactionManager(transactionManager, transactionDefinition));
-        }
-    }
-
-    /**
-     * Optionally sets the aggregate factories to use. By default, this implementation will auto detect available
-     * factories from the application context. Configuring them using this method will prevent auto detection.
-     *
-     * @param aggregateFactories The list of aggregate factories creating the aggregates to store.
-     */
-    @Override
-    public void setAggregateFactories(List<AggregateFactory<?>> aggregateFactories) {
-        this.autoDetectAggregateFactories = false;
-        super.setAggregateFactories(aggregateFactories);
+        return aggregateFactory;
     }
 
     @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+    public void setApplicationContext(@Nonnull ApplicationContext applicationContext) throws BeansException {
         this.applicationContext = applicationContext;
     }
 
+    /**
+     * Builder class to instantiate a {@link SpringAggregateSnapshotter}. The {@link AggregateFactory} instances are
+     * lazily retrieved by the {@link ApplicationContext}.
+     * <p>
+     * The {@link Executor} is defaulted to an {@link org.axonframework.common.DirectExecutor#INSTANCE}, the
+     * {@link TransactionManager} defaults to a {@link org.axonframework.common.transaction.NoTransactionManager} and
+     * the {@link SpanFactory} defaults to a {@link org.axonframework.tracing.NoOpSpanFactory}. Additionally, this
+     * Builder has convenience functions to default the {@link ParameterResolverFactory} and {@link HandlerDefinition}
+     * based on instances of these available on the classpath in case these are not provided (respectively
+     * {@link Builder#buildParameterResolverFactory()} and {@link Builder#buildHandlerDefinition()}). Upon instantiation
+     * of a {@link AggregateSnapshotter}, it is recommended to use these function to set those fields.
+     * <p>
+     * The {@link EventStore} is a <b>hard requirement</b> and as such should be provided.
+     *
+     * @see org.axonframework.messaging.annotation.ClasspathParameterResolverFactory
+     * @see org.axonframework.messaging.annotation.ClasspathHandlerDefinition
+     */
+    public static class Builder extends AggregateSnapshotter.Builder {
+
+        public Builder() {
+            aggregateFactories(Collections.emptyList());
+        }
+
+        @Override
+        public Builder eventStore(EventStore eventStore) {
+            super.eventStore(eventStore);
+            return this;
+        }
+
+        @Override
+        public Builder executor(Executor executor) {
+            super.executor(executor);
+            return this;
+        }
+
+        @Override
+        public Builder transactionManager(TransactionManager transactionManager) {
+            super.transactionManager(transactionManager);
+            return this;
+        }
+
+        @Override
+        public Builder repositoryProvider(RepositoryProvider repositoryProvider) {
+            super.repositoryProvider(repositoryProvider);
+            return this;
+        }
+
+        @Override
+        public Builder parameterResolverFactory(ParameterResolverFactory parameterResolverFactory) {
+            super.parameterResolverFactory(parameterResolverFactory);
+            return this;
+        }
+
+        @Override
+        public Builder handlerDefinition(HandlerDefinition handlerDefinition) {
+            super.handlerDefinition(handlerDefinition);
+            return this;
+        }
+
+        @Override
+        public Builder spanFactory(@Nonnull SpanFactory spanFactory) {
+            super.spanFactory(spanFactory);
+            return this;
+        }
+
+        @Override
+        public Builder spanFactory(@Nonnull SnapshotterSpanFactory spanFactory) {
+            super.spanFactory(spanFactory);
+            return this;
+        }
+
+        /**
+         * Initializes a {@link SpringAggregateSnapshotter} as specified through this Builder.
+         *
+         * @return a {@link SpringAggregateSnapshotter} as specified through this Builder
+         */
+        public SpringAggregateSnapshotter build() {
+            return new SpringAggregateSnapshotter(this);
+        }
+
+        /**
+         * Validates whether the fields contained in this Builder are set accordingly.
+         *
+         * @throws AxonConfigurationException if one field is asserted to be incorrect according to the Builder's
+         *                                    specifications
+         */
+        @Override
+        protected void validate() throws AxonConfigurationException {
+            super.validate();
+        }
+    }
 }

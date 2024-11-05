@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2010-2014. Axon Framework
+ * Copyright (c) 2010-2022. Axon Framework
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -30,7 +30,7 @@ public class AxonAssertionError extends AssertionError {
     private static final long serialVersionUID = 3731933425096971345L;
 
     /**
-     * Create a new error instance using the given <code>detailMessage</code>.
+     * Create a new error instance using the given {@code detailMessage}.
      *
      * @param detailMessage a detailed description of the failed assertion
      */
@@ -43,8 +43,7 @@ public class AxonAssertionError extends AssertionError {
     private StackTraceElement[] cleanStackTrace(StackTraceElement[] original) {
         int ignoreCount = 0;
         for (StackTraceElement element : original) {
-            if (element.getClassName().equals(Reporter.class.getName())
-                    || element.getClassName().equals(GivenWhenThenTestFixture.class.getName())) {
+            if (element.getClassName().startsWith("org.axonframework.test")) {
                 ignoreCount++;
             } else {
                 break;

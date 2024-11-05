@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2010-2014. Axon Framework
+ * Copyright (c) 2010-2022. Axon Framework
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,7 +18,8 @@ package org.axonframework.test.saga;
 
 
 import java.time.Duration;
-import java.time.ZonedDateTime;
+import java.time.Instant;
+import java.util.Map;
 
 /**
  * Interface describing methods that can be executed after the first "given" state has been supplied. Either more
@@ -32,8 +33,8 @@ public interface ContinuedGivenState extends WhenState {
     /**
      * Use this method to indicate that an aggregate with given identifier published certain events.
      * <p/>
-     * Can be chained to build natural sentences:<br/> <code>andThenAggregate(someIdentifier).published(someEvents)
-     * </code>
+     * Can be chained to build natural sentences:<br/> {@code andThenAggregate(someIdentifier).published(someEvents)
+     * }
      *
      * @param aggregateIdentifier The identifier of the aggregate the events should appear to come from
      * @return an object that allows registration of the actual events to send
@@ -46,8 +47,9 @@ public interface ContinuedGivenState extends WhenState {
      *
      * @param elapsedTime The amount of time that will elapse
      * @return an object that allows registration of the actual events to send
+     * @throws Exception if an exception happens when the duration elapses
      */
-    ContinuedGivenState andThenTimeElapses(Duration elapsedTime);
+    ContinuedGivenState andThenTimeElapses(Duration elapsedTime) throws Exception;
 
     /**
      * Simulate time shifts in the current given state. This can be useful when the time between given events is of
@@ -55,15 +57,28 @@ public interface ContinuedGivenState extends WhenState {
      *
      * @param newDateTime The time to advance the clock to
      * @return an object that allows registration of the actual events to send
+     * @throws Exception if an exception happens when the time advances
      */
-    ContinuedGivenState andThenTimeAdvancesTo(ZonedDateTime newDateTime);
+    ContinuedGivenState andThenTimeAdvancesTo(Instant newDateTime) throws Exception;
 
     /**
-     * Indicates that the given <code>event</code> has been published in the past. This event is sent to the associated
+     * Indicates that the given {@code event} has been published in the past. This event is sent to the associated
      * sagas.
      *
      * @param event The event to publish
      * @return an object that allows chaining of more given state
+     * @throws Exception if an exception happens when the event is handled
      */
     ContinuedGivenState andThenAPublished(Object event);
+
+    /**
+     * Indicates that the given {@code event} with given {@code metaData} has been published in the past. This event is sent to the associated
+     * sagas.
+     *
+     * @param event The event to publish
+     * @param metaData The meta data to attach to the event
+     * @return an object that allows chaining of more given state
+     * @throws Exception if an exception happens when the event is handled
+     */
+    ContinuedGivenState andThenAPublished(Object event, Map<String, ?> metaData);
 }

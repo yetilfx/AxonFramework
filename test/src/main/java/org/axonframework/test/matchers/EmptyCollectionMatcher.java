@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2010-2014. Axon Framework
+ * Copyright (c) 2010-2022. Axon Framework
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,13 +28,13 @@ import java.util.List;
  * @author Allard Buijze
  * @since 1.1
  */
-public class EmptyCollectionMatcher extends BaseMatcher<List<?>> {
+public class EmptyCollectionMatcher<T> extends BaseMatcher<List<T>> {
 
     private final String contentDescription;
 
     /**
      * Creates a matcher of a list of empty items. The name of the item type (in plural) is passed in the given
-     * <code>contentDescription</code> and will be part of the description of this matcher.
+     * {@code contentDescription} and will be part of the description of this matcher.
      *
      * @param contentDescription The description of the content type of the collection
      */

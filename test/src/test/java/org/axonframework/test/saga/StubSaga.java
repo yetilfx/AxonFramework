@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2010-2012. Axon Framework
+ * Copyright (c) 2010-2023. Axon Framework
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,52 +16,89 @@
 
 package org.axonframework.test.saga;
 
+import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.eventhandling.EventBus;
 import org.axonframework.eventhandling.EventMessage;
 import org.axonframework.eventhandling.GenericEventMessage;
+import org.axonframework.eventhandling.Timestamp;
+import org.axonframework.eventhandling.TrackingToken;
 import org.axonframework.eventhandling.scheduling.EventScheduler;
 import org.axonframework.eventhandling.scheduling.ScheduleToken;
-import org.axonframework.saga.annotation.AbstractAnnotatedSaga;
-import org.axonframework.saga.annotation.EndSaga;
-import org.axonframework.saga.annotation.SagaEventHandler;
-import org.axonframework.saga.annotation.StartSaga;
+import org.axonframework.messaging.annotation.MetaDataValue;
+import org.axonframework.modelling.saga.EndSaga;
+import org.axonframework.modelling.saga.SagaEventHandler;
+import org.axonframework.modelling.saga.SagaLifecycle;
+import org.axonframework.modelling.saga.StartSaga;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.Duration;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import javax.inject.Inject;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
+ * Stub saga used to test various scenarios of the {@link FixtureConfiguration}.
+ *
  * @author Allard Buijze
  */
-public class StubSaga extends AbstractAnnotatedSaga {
+@SuppressWarnings("unused")
+public class StubSaga {
 
     private static final int TRIGGER_DURATION_MINUTES = 10;
+    @Autowired
     private transient StubGateway stubGateway;
-    private transient EventBus eventBus;
+    @Inject
     private transient EventScheduler scheduler;
+    @Inject
+    private NonTransientResource nonTransientResource;
+    @Inject
+    private transient CommandGateway commandGateway;
+
     private List<Object> handledEvents = new ArrayList<>();
     private ScheduleToken timer;
 
     @StartSaga
     @SagaEventHandler(associationProperty = "identifier")
-    public void handleSagaStart(TriggerSagaStartEvent event, EventMessage<TriggerSagaStartEvent> message) {
+    public void handleSagaStart(TriggerSagaStartEvent event,
+                                TrackingToken trackingToken,
+                                EventMessage<TriggerSagaStartEvent> message,
+                                @MetaDataValue("extraIdentifier") Object extraIdentifier) {
+        assertNotNull(trackingToken);
         handledEvents.add(event);
-        timer = scheduler.schedule(Duration.ofMinutes(TRIGGER_DURATION_MINUTES),
+
+        if (extraIdentifier != null) {
+            associateWith("extraIdentifier", extraIdentifier.toString());
+        }
+
+        timer = scheduler.schedule(message.getTimestamp().plus(TRIGGER_DURATION_MINUTES, ChronoUnit.MINUTES),
                                    new GenericEventMessage<>(new TimerTriggeredEvent(event.getIdentifier())));
     }
 
     @StartSaga(forceNew = true)
     @SagaEventHandler(associationProperty = "identifier")
-    public void handleForcedSagaStart(ForceTriggerSagaStartEvent event) {
+    public void handleForcedSagaStart(ForceTriggerSagaStartEvent event, @Timestamp Instant timestamp) {
         handledEvents.add(event);
-        timer = scheduler.schedule(Duration.ofMinutes(TRIGGER_DURATION_MINUTES),
+        timer = scheduler.schedule(timestamp.plus(TRIGGER_DURATION_MINUTES, ChronoUnit.MINUTES),
                                    new GenericEventMessage<>(new TimerTriggeredEvent(event.getIdentifier())));
     }
 
     @SagaEventHandler(associationProperty = "identifier")
-    public void handleEvent(TriggerExistingSagaEvent event) {
+    public void handleEvent(TriggerExistingSagaEvent event, EventBus eventBus) {
         handledEvents.add(event);
         eventBus.publish(new GenericEventMessage<>(new SagaWasTriggeredEvent(this)));
+    }
+
+    @SagaEventHandler(associationProperty = "identifier")
+    public void handle(ParameterResolvedEvent event, AtomicBoolean assertion) {
+        handledEvents.add(event);
+        assertFalse(assertion.get());
+        assertion.set(true);
+        commandGateway.send(new ResolveParameterCommand(event.getIdentifier(), assertion));
     }
 
     @EndSaga
@@ -93,38 +130,24 @@ public class StubSaga extends AbstractAnnotatedSaga {
                                    new GenericEventMessage<>(new TimerTriggeredEvent(event.getIdentifier())));
     }
 
-    public EventBus getEventBus() {
-        return eventBus;
-    }
-
-    public void setEventBus(EventBus eventBus) {
-        this.eventBus = eventBus;
+    @SagaEventHandler(associationProperty = "identifier", associationResolver = AssociationResolverStub.class)
+    public void handleTriggerAssociationResolverSagaEvent(TriggerAssociationResolverSagaEvent event) {
+        handledEvents.add(event);
     }
 
     public EventScheduler getScheduler() {
         return scheduler;
     }
 
-    public void setScheduler(EventScheduler scheduler) {
-        this.scheduler = scheduler;
-    }
-
-    public void setStubGateway(StubGateway stubGateway) {
-        this.stubGateway = stubGateway;
-    }
-
-    @Override
     public void associateWith(String key, String value) {
-        super.associateWith(key, value);
+        SagaLifecycle.associateWith(key, value);
     }
 
-    @Override
     public void removeAssociationWith(String key, String value) {
-        super.removeAssociationWith(key, value);
+        SagaLifecycle.removeAssociationWith(key, value);
     }
 
-    @Override
     public void end() {
-        super.end();
+        SagaLifecycle.end();
     }
 }

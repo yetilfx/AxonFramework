@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2010-2014. Axon Framework
+ * Copyright (c) 2010-2022. Axon Framework
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,7 +18,8 @@ package org.axonframework.test.saga;
 
 
 import java.time.Duration;
-import java.time.ZonedDateTime;
+import java.time.Instant;
+import java.util.Map;
 
 /**
  * Interface providing an API to methods in the "when" state of the fixture execution. Unlike the methods in the
@@ -35,7 +36,7 @@ public interface WhenState {
      * {@link org.axonframework.test.saga.ContinuedGivenState#andThenAggregate(String)} andThen} methods, this method
      * will start recording activity on the EventBus and CommandBus.
      * <p/>
-     * Can be chained to build natural sentences:<br/> <code>whenAggregate(someIdentifier).publishes(anEvent)</code>
+     * Can be chained to build natural sentences:<br/> {@code whenAggregate(someIdentifier).publishes(anEvent)}
      * <p/>
      * Note that if you inject resources using {@link FixtureConfiguration#registerResource(Object)}, you may need to
      * reset them yourself if they are manipulated by the Saga in the "given" stage of the test.
@@ -55,6 +56,19 @@ public interface WhenState {
      * @return an object allowing you to verify the test results
      */
     FixtureExecutionResult whenPublishingA(Object event);
+
+    /**
+     * Use this method to indicate an application is published with given additional {@code metaData},
+     * <em>while recording the outcome</em>.
+     * <p/>
+     * Note that if you inject resources using {@link FixtureConfiguration#registerResource(Object)}, you may need to
+     * reset them yourself if they are manipulated by the Saga in the "given" stage of the test.
+     *
+     * @param event the event to publish
+     * @param metaData The meta data to attach to the event
+     * @return an object allowing you to verify the test results
+     */
+    FixtureExecutionResult whenPublishingA(Object event, Map<String, ?> metaData);
 
     /**
      * Mimic an elapsed time with no relevant activity for the Saga. If any Events are scheduled to be published within
@@ -80,5 +94,5 @@ public interface WhenState {
      * @param newDateTime The time to advance the clock to
      * @return an object allowing you to verify the test results
      */
-    FixtureExecutionResult whenTimeAdvancesTo(ZonedDateTime newDateTime);
+    FixtureExecutionResult whenTimeAdvancesTo(Instant newDateTime);
 }

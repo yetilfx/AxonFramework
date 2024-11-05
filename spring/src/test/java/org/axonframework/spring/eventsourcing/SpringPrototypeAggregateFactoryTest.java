@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2010-2012. Axon Framework
+ * Copyright (c) 2010-2023. Axon Framework
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,53 +16,107 @@
 
 package org.axonframework.spring.eventsourcing;
 
-import org.axonframework.common.annotation.ParameterResolverFactory;
-import org.axonframework.eventsourcing.GenericDomainEventMessage;
-import org.axonframework.spring.domain.SpringWiredAggregate;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.axonframework.config.Configurer;
+import org.axonframework.config.ConfigurerModule;
+import org.axonframework.config.ModuleConfiguration;
+import org.axonframework.eventhandling.DomainEventMessage;
+import org.axonframework.eventhandling.GenericDomainEventMessage;
+import org.axonframework.eventsourcing.AggregateFactory;
+import org.axonframework.eventsourcing.eventstore.EmbeddedEventStore;
+import org.axonframework.eventsourcing.eventstore.inmemory.InMemoryEventStorageEngine;
+import org.axonframework.spring.config.SpringAggregateLookup;
+import org.axonframework.spring.config.SpringAxonConfiguration;
+import org.axonframework.spring.config.SpringConfigurer;
+import org.axonframework.spring.eventsourcing.context.SpringWiredAggregate;
+import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
+ * Test class validating the {@link SpringPrototypeAggregateFactory}.
+ *
  * @author Allard Buijze
  */
-@ContextConfiguration(locations = {"/META-INF/spring/spring-prototype-aggregate-factory.xml"})
-@RunWith(SpringJUnit4ClassRunner.class)
-public class SpringPrototypeAggregateFactoryTest {
+@ExtendWith(SpringExtension.class)
+@ContextConfiguration(classes = SpringPrototypeAggregateFactoryTest.Context.class)
+class SpringPrototypeAggregateFactoryTest {
 
+    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     @Autowired
-    private SpringPrototypeAggregateFactory<SpringWiredAggregate> testSubject;
-
-    @Autowired
-    private ParameterResolverFactory parameterResolverFactory;
+    private AggregateFactory<SpringWiredAggregate> testSubject;
 
     @Test
-    public void testContextStarts() throws Exception {
+    void contextStarts() {
         assertNotNull(testSubject);
     }
 
     @Test
-    public void testCreateNewAggregateInstance() {
-        SpringWiredAggregate aggregate = testSubject.createAggregate("id2", new GenericDomainEventMessage<>(
-                "id2", 0, "FirstEvent"));
-        assertTrue("Aggregate's init method not invoked", aggregate.isInitialized());
-        assertNotNull("ContextAware method not invoked", aggregate.getContext());
-        Assert.assertEquals("it's here", aggregate.getSpringConfiguredName());
+    void createNewAggregateInstance() {
+        GenericDomainEventMessage<String> domainEvent = new GenericDomainEventMessage<>(
+                "SpringWiredAggregate", "id2", 0, "FirstEvent"
+        );
+        SpringWiredAggregate aggregate = testSubject.createAggregateRoot("id2", domainEvent);
+
+        assertNotNull(aggregate.getContext(), "ContextAware method not invoked");
     }
 
     @Test
-    public void testProcessSnapshotAggregateInstance() {
-        SpringWiredAggregate aggregate = testSubject.createAggregate("id2",
-                                                                     new GenericDomainEventMessage<>(
-                                                                             "id2", 5, new SpringWiredAggregate()));
-        assertTrue("Aggregate's init method not invoked", aggregate.isInitialized());
-        assertNotNull("ContextAware method not invoked", aggregate.getContext());
-        Assert.assertEquals("it's here", aggregate.getSpringConfiguredName());
+    void processSnapshotAggregateInstance() {
+        DomainEventMessage<SpringWiredAggregate> snapshotEvent = new GenericDomainEventMessage<>(
+                "SpringWiredAggregate", "id2", 5, new SpringWiredAggregate()
+        );
+        SpringWiredAggregate aggregate = testSubject.createAggregateRoot("id2", snapshotEvent);
+
+        assertNotNull(aggregate.getContext(), "ContextAware method not invoked");
+    }
+
+    @Configuration
+    @ComponentScan(basePackages = {"org.axonframework.spring.eventsourcing.context"})
+    static class Context {
+
+        // Wired to ensure an EventStore is present for the aggregate to allow event sourcing.
+        @Bean
+        public EmbeddedEventStore eventStore() {
+            return EmbeddedEventStore.builder()
+                                     .storageEngine(new InMemoryEventStorageEngine())
+                                     .build();
+        }
+
+        /**
+         * The below three bean methods are a copy of the
+         * {@code org.axonframework.springboot.autoconfig.InfraConfiguration} to set up the basics to auto-wired
+         * Aggregates.
+         * <p>
+         * Copied to keep this test Spring Boot agnostic.
+         */
+        @Bean
+        public static SpringAggregateLookup springAggregateLookup() {
+            return new SpringAggregateLookup();
+        }
+
+        @Bean
+        public SpringAxonConfiguration springAxonConfiguration(Configurer configurer) {
+            return new SpringAxonConfiguration(configurer);
+        }
+
+        @Bean
+        public SpringConfigurer springAxonConfigurer(ConfigurableListableBeanFactory beanFactory,
+                                                     List<ConfigurerModule> configurerModules,
+                                                     List<ModuleConfiguration> moduleConfigurations) {
+            SpringConfigurer configurer = new SpringConfigurer(beanFactory);
+            moduleConfigurations.forEach(configurer::registerModule);
+            configurerModules.forEach(c -> c.configureModule(configurer));
+            return configurer;
+        }
     }
 }

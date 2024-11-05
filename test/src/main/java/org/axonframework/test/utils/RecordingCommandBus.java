@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2010-2014. Axon Framework
+ * Copyright (c) 2010-2022. Axon Framework
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,13 +20,18 @@ import org.axonframework.commandhandling.CommandBus;
 import org.axonframework.commandhandling.CommandCallback;
 import org.axonframework.commandhandling.CommandMessage;
 import org.axonframework.common.Registration;
+import org.axonframework.messaging.MessageDispatchInterceptor;
 import org.axonframework.messaging.MessageHandler;
+import org.axonframework.messaging.MessageHandlerInterceptor;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import javax.annotation.Nonnull;
+
+import static org.axonframework.commandhandling.GenericCommandResultMessage.asCommandResultMessage;
 
 /**
  * CommandBus implementation that does not perform any actions on subscriptions or dispatched commands, but records
@@ -38,28 +43,32 @@ import java.util.concurrent.ConcurrentMap;
  */
 public class RecordingCommandBus implements CommandBus {
 
-    private ConcurrentMap<String, MessageHandler<? super CommandMessage<?>>> subscriptions = new ConcurrentHashMap<>();
-    private List<CommandMessage<?>> dispatchedCommands = new ArrayList<>();
+    private final ConcurrentMap<String, MessageHandler<? super CommandMessage<?>>> subscriptions = new ConcurrentHashMap<>();
+    private final List<CommandMessage<?>> dispatchedCommands = new ArrayList<>();
     private CallbackBehavior callbackBehavior = new DefaultCallbackBehavior();
 
     @Override
-    public <C> void dispatch(CommandMessage<C> command) {
+    public <C> void dispatch(@Nonnull CommandMessage<C> command) {
         dispatchedCommands.add(command);
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public <C, R> void dispatch(CommandMessage<C> command, CommandCallback<? super C, R> callback) {
+    public <C, R> void dispatch(@Nonnull CommandMessage<C> command,
+                                @Nonnull CommandCallback<? super C, ? super R> callback) {
         dispatchedCommands.add(command);
         try {
-            callback.onSuccess(command, (R) callbackBehavior.handle(command.getPayload(), command.getMetaData()));
+            callback.onResult(command, asCommandResultMessage(
+                    callbackBehavior.handle(command.getPayload(), command.getMetaData())
+            ));
         } catch (Throwable throwable) {
-            callback.onFailure(command, throwable);
+            callback.onResult(command, asCommandResultMessage(throwable));
         }
     }
 
     @Override
-    public Registration subscribe(String commandName, MessageHandler<? super CommandMessage<?>> handler) {
+    public Registration subscribe(@Nonnull String commandName,
+                                  @Nonnull MessageHandler<? super CommandMessage<?>> handler) {
         subscriptions.putIfAbsent(commandName, handler);
         return () -> subscriptions.remove(commandName, handler);
     }
@@ -79,23 +88,23 @@ public class RecordingCommandBus implements CommandBus {
     }
 
     /**
-     * Indicates whether the given <code>commandHandler</code> is subscribed to this command bus.
+     * Indicates whether the given {@code commandHandler} is subscribed to this command bus.
      *
      * @param commandHandler The command handler to verify the subscription for
-     * @return <code>true</code> if the handler is subscribed, otherwise <code>false</code>.
+     * @return {@code true} if the handler is subscribed, otherwise {@code false}.
      */
     public boolean isSubscribed(MessageHandler<? super CommandMessage<?>> commandHandler) {
         return subscriptions.containsValue(commandHandler);
     }
 
     /**
-     * Indicates whether the given <code>commandHandler</code> is subscribed to commands of the given
-     * <code>commandType</code> on this command bus.
+     * Indicates whether the given {@code commandHandler} is subscribed to commands of the given
+     * {@code commandType} on this command bus.
      *
      * @param commandName    The name of the command to verify the subscription for
      * @param commandHandler The command handler to verify the subscription for
      * @param <C>            The type of command to verify the subscription for
-     * @return <code>true</code> if the handler is subscribed, otherwise <code>false</code>.
+     * @return {@code true} if the handler is subscribed, otherwise {@code false}.
      */
     public <C> boolean isSubscribed(String commandName, MessageHandler<? super CommandMessage<?>> commandHandler) {
         return subscriptions.containsKey(commandName) && subscriptions.get(commandName).equals(commandHandler);
@@ -127,5 +136,17 @@ public class RecordingCommandBus implements CommandBus {
      */
     public void setCallbackBehavior(CallbackBehavior callbackBehavior) {
         this.callbackBehavior = callbackBehavior;
+    }
+
+    @Override
+    public Registration registerDispatchInterceptor(
+            @Nonnull MessageDispatchInterceptor<? super CommandMessage<?>> dispatchInterceptor) {
+        return null;
+    }
+
+    @Override
+    public Registration registerHandlerInterceptor(
+            @Nonnull MessageHandlerInterceptor<? super CommandMessage<?>> handlerInterceptor) {
+        return () -> true;
     }
 }
